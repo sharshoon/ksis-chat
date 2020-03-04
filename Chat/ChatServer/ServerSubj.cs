@@ -14,8 +14,8 @@ namespace ChatServer
         List<ClientSubj> clients = new List<ClientSubj>();
 
         static IPAddress remoteAddress; // хост для отправки данных
-        const int remotePort = 8001; // порт для отправки данных
-        const int localPort = 8001; // локальный порт для прослушивания входящих подключений
+        const int remotePort = 8888; // порт для отправки данных
+        const int localPort = 8888; // локальный порт для прослушивания входящих подключений
 
         protected internal void AddConnection(ClientSubj clientSubj)
         {
@@ -34,7 +34,7 @@ namespace ChatServer
         {
             try
             {
-                tcpListener = new TcpListener(IPAddress.Any, 8888);
+                tcpListener = new TcpListener(IPAddress.Any, localPort);
                 tcpListener.Start();
                 Console.WriteLine("Сервер запущен. Ожидание подключений...");
 
@@ -55,32 +55,6 @@ namespace ChatServer
         }
         protected internal void ReceiveUdpMessage()
         {
-            //remoteAddress = IPAddress.Parse("235.5.5.11");
-            //UdpClient receiver = new UdpClient(localPort); // UdpClient для получения данных
-            //receiver.JoinMulticastGroup(remoteAddress, 20);
-
-            //IPEndPoint remoteIp = null;
-            //string localAddress = LocalIPAddress();
-            //try
-            //{
-            //    while (true)
-            //    {
-            //        byte[] data = receiver.Receive(ref remoteIp); // получаем данные
-            //        if (remoteIp.Address.ToString().Equals(localAddress))
-            //            continue;
-            //        string message = Encoding.Unicode.GetString(data);
-            //        Console.WriteLine(message);
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    Console.WriteLine(ex.Message);
-            //}
-            //finally
-            //{
-            //    receiver.Close();
-            //}
-
             int listenPort = 11000;
 
             UdpClient listener = new UdpClient(listenPort);
@@ -90,13 +64,20 @@ namespace ChatServer
             {
                 while (true)
                 {
-                    //Console.WriteLine("hello");
-                    //Thread.Sleep(1000);
                     Console.WriteLine("Waiting for broadcast");
                     byte[] bytes = listener.Receive(ref groupEP);
 
                     Console.WriteLine($"Received broadcast from {groupEP} :");
-                    Console.WriteLine($" {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
+                    //Console.WriteLine($" {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
+
+                    int remoteUdpPort = 9119;
+                    Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    IPEndPoint ep = new IPEndPoint(groupEP.Address, remoteUdpPort);
+
+                    var host = Dns.GetHostEntry(Dns.GetHostName());
+                    string IP = host.AddressList.FirstOrDefault(p => p.AddressFamily == AddressFamily.InterNetwork).ToString();
+                    byte[] sendbuf = Encoding.ASCII.GetBytes(IP + ","+ remotePort.ToString());
+                    s.SendTo(sendbuf, ep);
                 }
             }
             catch (SocketException e)
@@ -113,9 +94,9 @@ namespace ChatServer
             byte[] data = Encoding.Unicode.GetBytes(message);
             for (int i = 0; i < clients.Count; i++)
             {
+                clients[i].Stream.Write(data, 0, data.Length);
                 //if (clients[i].ID != id)
                 //{
-                    clients[i].Stream.Write(data, 0, data.Length);
                 //}
             }
         }

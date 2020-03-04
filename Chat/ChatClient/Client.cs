@@ -17,8 +17,8 @@ namespace ChatClient
     {
         private bool alive = false;
         private static string userName;
-        private const string host = "127.0.0.1";
-        private const int port = 8888;
+        private string host = "127.0.0.1";
+        private int port = 8888;
         private static TcpClient client;
         private static NetworkStream stream;
         private TextBox tbChat;
@@ -30,6 +30,9 @@ namespace ChatClient
             userName = name;
             client = new TcpClient();
             Form = form;
+            this.host = ip;
+            this.port = int.Parse(port);
+           
             try
             {
                 client.Connect(ip, int.Parse(port)); //подключение клиента
@@ -101,19 +104,54 @@ namespace ChatClient
         }
         public void BroadCastRequest()
         {
+            Thread receiveUdp = new Thread(new ThreadStart(ReceiveUdpMessage));
+            receiveUdp.Start();
+
             var host = Dns.GetHostEntry(Dns.GetHostName());
             var ip = host.AddressList.FirstOrDefault(p => p.AddressFamily == AddressFamily.InterNetwork);
             byte[] ipBytes = ip.GetAddressBytes();
             ipBytes[ipBytes.Length - 1] = 255;
-            ip = new IPAddress(ipBytes);
-
-            IPAddress broadcast = ip;
-
+            IPAddress broadcast = new IPAddress(ipBytes);
             Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            byte[] sendbuf = Encoding.ASCII.GetBytes("test");
-            IPEndPoint ep = new IPEndPoint(broadcast, 11000);
 
+            List<byte> buf = new List<byte> {};
+            foreach (var t in ip.GetAddressBytes())
+            {
+                buf.Add(t);
+            }
+
+            foreach (var t in port.ToString())
+            {
+                buf.Add(byte.Parse(t.ToString()));
+            }
+
+            byte[] sendbuf = buf.ToArray();
+            IPEndPoint ep = new IPEndPoint(broadcast, 11000);
             s.SendTo(sendbuf, ep);
+        }
+        public void ReceiveUdpMessage()
+        {
+            int listenPort = 9119;
+
+            UdpClient listener = new UdpClient(listenPort);
+            IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
+
+            try
+            {
+                while (true)
+                {
+                    byte[] bytes = listener.Receive(ref groupEP);
+                    MessageBox.Show(Encoding.ASCII.GetString(bytes, 0, bytes.Length));
+                }
+            }
+            catch (SocketException e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                listener.Close();
+            }
         }
         public void Disconnect()
         {

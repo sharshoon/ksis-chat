@@ -15,12 +15,6 @@ namespace ChatClient
 {
     public partial class Form1 : Form
     {
-        //bool alive = false;
-        //static string userName;
-        //private const string host = "127.0.0.1";
-        //private const int port = 8888;
-        //static TcpClient client;
-        //static NetworkStream stream;
 
         Client user = new Client();
 
@@ -48,7 +42,7 @@ namespace ChatClient
             user.Disconnect();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void btnFindServer_Click(object sender, EventArgs e)
         {
             user.BroadCastRequest();
         }
