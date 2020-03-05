@@ -42,11 +42,14 @@
             this.btnFindServer = new System.Windows.Forms.Button();
             this.cbServers = new System.Windows.Forms.ComboBox();
             this.btnSaveHistory = new System.Windows.Forms.Button();
+            this.cbChooseUser = new System.Windows.Forms.ComboBox();
+            this.btnReceiver = new System.Windows.Forms.Button();
+            this.tbReceiver = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // tbMessage
             // 
-            this.tbMessage.Location = new System.Drawing.Point(3, 477);
+            this.tbMessage.Location = new System.Drawing.Point(3, 492);
             this.tbMessage.Multiline = true;
             this.tbMessage.Name = "tbMessage";
             this.tbMessage.Size = new System.Drawing.Size(401, 53);
@@ -54,7 +57,7 @@
             // 
             // btnSend
             // 
-            this.btnSend.Location = new System.Drawing.Point(410, 477);
+            this.btnSend.Location = new System.Drawing.Point(410, 492);
             this.btnSend.Name = "btnSend";
             this.btnSend.Size = new System.Drawing.Size(142, 53);
             this.btnSend.TabIndex = 1;
@@ -64,7 +67,7 @@
             // 
             // tbChat
             // 
-            this.tbChat.Location = new System.Drawing.Point(3, 157);
+            this.tbChat.Location = new System.Drawing.Point(3, 172);
             this.tbChat.Multiline = true;
             this.tbChat.Name = "tbChat";
             this.tbChat.Size = new System.Drawing.Size(549, 314);
@@ -72,7 +75,7 @@
             // 
             // btnLogin
             // 
-            this.btnLogin.Location = new System.Drawing.Point(410, 83);
+            this.btnLogin.Location = new System.Drawing.Point(410, 98);
             this.btnLogin.Name = "btnLogin";
             this.btnLogin.Size = new System.Drawing.Size(142, 31);
             this.btnLogin.TabIndex = 3;
@@ -82,7 +85,7 @@
             // 
             // btnLogout
             // 
-            this.btnLogout.Location = new System.Drawing.Point(410, 120);
+            this.btnLogout.Location = new System.Drawing.Point(410, 135);
             this.btnLogout.Name = "btnLogout";
             this.btnLogout.Size = new System.Drawing.Size(142, 31);
             this.btnLogout.TabIndex = 4;
@@ -92,14 +95,14 @@
             // 
             // tbName
             // 
-            this.tbName.Location = new System.Drawing.Point(55, 87);
+            this.tbName.Location = new System.Drawing.Point(55, 102);
             this.tbName.Name = "tbName";
             this.tbName.Size = new System.Drawing.Size(349, 22);
             this.tbName.TabIndex = 5;
             // 
             // tbPort
             // 
-            this.tbPort.Location = new System.Drawing.Point(292, 124);
+            this.tbPort.Location = new System.Drawing.Point(292, 139);
             this.tbPort.Name = "tbPort";
             this.tbPort.Size = new System.Drawing.Size(112, 22);
             this.tbPort.TabIndex = 6;
@@ -107,7 +110,7 @@
             // 
             // tbIP
             // 
-            this.tbIP.Location = new System.Drawing.Point(55, 124);
+            this.tbIP.Location = new System.Drawing.Point(55, 139);
             this.tbIP.Name = "tbIP";
             this.tbIP.Size = new System.Drawing.Size(190, 22);
             this.tbIP.TabIndex = 7;
@@ -116,7 +119,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(10, 89);
+            this.label1.Location = new System.Drawing.Point(10, 107);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(39, 17);
             this.label1.TabIndex = 8;
@@ -125,7 +128,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(10, 124);
+            this.label2.Location = new System.Drawing.Point(10, 142);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(24, 17);
             this.label2.TabIndex = 9;
@@ -134,7 +137,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(251, 127);
+            this.label3.Location = new System.Drawing.Point(251, 142);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(38, 17);
             this.label3.TabIndex = 10;
@@ -144,7 +147,7 @@
             // 
             this.btnFindServer.Location = new System.Drawing.Point(13, 12);
             this.btnFindServer.Name = "btnFindServer";
-            this.btnFindServer.Size = new System.Drawing.Size(539, 31);
+            this.btnFindServer.Size = new System.Drawing.Size(288, 46);
             this.btnFindServer.TabIndex = 11;
             this.btnFindServer.Text = "Найти сервер";
             this.btnFindServer.UseVisualStyleBackColor = true;
@@ -153,15 +156,15 @@
             // cbServers
             // 
             this.cbServers.FormattingEnabled = true;
-            this.cbServers.Location = new System.Drawing.Point(13, 50);
+            this.cbServers.Location = new System.Drawing.Point(13, 65);
             this.cbServers.Name = "cbServers";
-            this.cbServers.Size = new System.Drawing.Size(536, 24);
+            this.cbServers.Size = new System.Drawing.Size(288, 24);
             this.cbServers.TabIndex = 12;
             this.cbServers.SelectionChangeCommitted += new System.EventHandler(this.cbServers_SelectionChangeCommitted);
             // 
             // btnSaveHistory
             // 
-            this.btnSaveHistory.Location = new System.Drawing.Point(3, 536);
+            this.btnSaveHistory.Location = new System.Drawing.Point(3, 551);
             this.btnSaveHistory.Name = "btnSaveHistory";
             this.btnSaveHistory.Size = new System.Drawing.Size(549, 31);
             this.btnSaveHistory.TabIndex = 13;
@@ -169,11 +172,39 @@
             this.btnSaveHistory.UseVisualStyleBackColor = true;
             this.btnSaveHistory.Click += new System.EventHandler(this.btnSaveHistory_Click);
             // 
+            // cbChooseUser
+            // 
+            this.cbChooseUser.FormattingEnabled = true;
+            this.cbChooseUser.Location = new System.Drawing.Point(570, 195);
+            this.cbChooseUser.Name = "cbChooseUser";
+            this.cbChooseUser.Size = new System.Drawing.Size(239, 24);
+            this.cbChooseUser.TabIndex = 14;
+            // 
+            // btnReceiver
+            // 
+            this.btnReceiver.Location = new System.Drawing.Point(307, 12);
+            this.btnReceiver.Name = "btnReceiver";
+            this.btnReceiver.Size = new System.Drawing.Size(245, 46);
+            this.btnReceiver.TabIndex = 15;
+            this.btnReceiver.Text = "Отправлять сообщения этому пользователю";
+            this.btnReceiver.UseVisualStyleBackColor = true;
+            this.btnReceiver.Click += new System.EventHandler(this.btnUsersFind_Click);
+            // 
+            // tbReceiver
+            // 
+            this.tbReceiver.Location = new System.Drawing.Point(307, 65);
+            this.tbReceiver.Name = "tbReceiver";
+            this.tbReceiver.Size = new System.Drawing.Size(245, 22);
+            this.tbReceiver.TabIndex = 16;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(561, 571);
+            this.ClientSize = new System.Drawing.Size(564, 591);
+            this.Controls.Add(this.tbReceiver);
+            this.Controls.Add(this.btnReceiver);
+            this.Controls.Add(this.cbChooseUser);
             this.Controls.Add(this.btnSaveHistory);
             this.Controls.Add(this.cbServers);
             this.Controls.Add(this.btnFindServer);
@@ -212,6 +243,9 @@
         private System.Windows.Forms.Button btnFindServer;
         private System.Windows.Forms.ComboBox cbServers;
         private System.Windows.Forms.Button btnSaveHistory;
+        private System.Windows.Forms.ComboBox cbChooseUser;
+        private System.Windows.Forms.Button btnReceiver;
+        private System.Windows.Forms.TextBox tbReceiver;
     }
 }
 

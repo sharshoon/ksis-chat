@@ -24,8 +24,6 @@ namespace ChatClient
         private static NetworkStream stream;
         private TextBox tbChat;
         private Form1 Form;
-        private ComboBox cbServers;
-        private List<ServerInfo> servers = new List<ServerInfo>();
 
         public void Login(string name, string ip, string port)
         {
@@ -36,7 +34,7 @@ namespace ChatClient
            
             try
             {
-                client.Connect(ip, int.Parse(port)); //подключение клиента
+                client.Connect(this.host, this.port); //подключение клиента
                 stream = client.GetStream(); // получаем поток
 
                 Thread receiveThread = new Thread(new ThreadStart(ReceiveMessage));
@@ -51,11 +49,13 @@ namespace ChatClient
                 MessageBox.Show(ex.Message);
             }
         }
-        public void SendMessage(TextBox tbMessage)
+        public void SendMessage(TextBox tbMessage, TextBox tbReceiver)
         {
             try
             {
-                string message = String.Format(tbMessage.Text);
+                string message = tbReceiver.Text.Trim() == "" ? 
+                    String.Format(tbMessage.Text) :
+                    String.Format(tbMessage.Text + "|" + tbReceiver.Text);
                 byte[] data = Encoding.Unicode.GetBytes(message);
                 stream.Write(data, 0, data.Length);
                 tbMessage.Clear();
@@ -103,68 +103,7 @@ namespace ChatClient
                 }
             }
         }
-        public void BroadCastRequest()
-        {
-            Thread receiveUdp = new Thread(new ThreadStart(ReceiveUdpMessage));
-            receiveUdp.Start();
-
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-            var ip = host.AddressList.FirstOrDefault(p => p.AddressFamily == AddressFamily.InterNetwork);
-            byte[] ipBytes = ip.GetAddressBytes();
-            ipBytes[ipBytes.Length - 1] = 255;
-            IPAddress broadcast = new IPAddress(ipBytes);
-            Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-
-            List<byte> buf = new List<byte> {};
-            foreach (var t in ip.GetAddressBytes())
-            {
-                buf.Add(t);
-            }
-
-            foreach (var t in port.ToString())
-            {
-                buf.Add(byte.Parse(t.ToString()));
-            }
-
-            byte[] sendbuf = buf.ToArray();
-            IPEndPoint ep = new IPEndPoint(broadcast, 11000);
-            s.SendTo(sendbuf, ep);
-        }
-        public void ReceiveUdpMessage()
-        {
-            int listenPort = 9119;
-
-            UdpClient listener = new UdpClient(listenPort);
-            IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
-
-            try
-            {
-                while (true)
-                {
-                    byte[] bytes = listener.Receive(ref groupEP);
-                    AddServer(Encoding.ASCII.GetString(bytes, 0, bytes.Length));
-                }
-            }
-            catch (SocketException e)
-            {
-                Console.WriteLine(e);
-            }
-            finally
-            {
-                listener.Close();
-            }
-        }
-        private void AddServer(string server)
-        {
-            Form.Invoke(new MethodInvoker(() =>
-            {
-                string[] args = server.Split(',');
-                servers.Add(new ServerInfo { Name = args.FirstOrDefault(), Port = args.LastOrDefault() });
-                MessageBox.Show(servers[0].Name);
-                cbServers.DataSource = servers;
-                cbServers.DisplayMember = "Name";
-            }));
-        }
+        
         public void Disconnect()
         {
             alive = false;
@@ -182,12 +121,15 @@ namespace ChatClient
                 log.Write(tbChat.Text);
             }
         }
-
-        public Client(TextBox tbChat, Form1 form, ComboBox cbServers)
+        //public List<string> GetUsers()
+        //{
+        //    var result = new List<string>();
+            
+        //}
+        public Client(TextBox tbChat, Form1 form)
         {
             Form = form;
             this.tbChat = tbChat;
-            this.cbServers = cbServers;
         }
     }
 }

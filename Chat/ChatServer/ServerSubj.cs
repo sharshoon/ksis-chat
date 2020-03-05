@@ -11,7 +11,7 @@ namespace ChatServer
     class ServerSubj
     {
         static TcpListener tcpListener;
-        List<ClientSubj> clients = new List<ClientSubj>();
+        internal List<ClientSubj> clients = new List<ClientSubj>();
 
         static IPAddress remoteAddress; // хост для отправки данных
         const int remotePort = 8888; // порт для отправки данных
@@ -99,6 +99,14 @@ namespace ChatServer
                 //{
                 //}
             }
+        }
+        protected internal void IndividualMessage(string message, string id, string userName)
+        {
+            byte[] data = Encoding.Unicode.GetBytes(message);
+            clients.FirstOrDefault(p => p.userName.Trim() == userName.Trim())
+                .Stream.Write(data, 0, data.Length);
+            clients.FirstOrDefault(p => p.ID == id)
+                .Stream.Write(data, 0, data.Length);
         }
         protected internal void Disconnect()
         {

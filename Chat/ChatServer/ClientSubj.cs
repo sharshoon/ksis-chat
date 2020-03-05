@@ -8,7 +8,7 @@ namespace ChatServer
     {
         protected internal string ID { get; private set; }
         protected internal NetworkStream Stream { get; private set; }
-        string userName;
+        internal string userName;
         TcpClient client;
         ServerSubj server;
 
@@ -28,19 +28,30 @@ namespace ChatServer
                 // получаем имя пользователя
                 string message = GetMessage();
                 userName = message;
-
+                if (CountEqualNames(userName) != 0)
+                {
+                    userName = userName + $"({CountEqualNames(userName).ToString()})";
+                }
                 message = userName + " вошел в чат!!!";
                 server.BroadcastMessage(message, this.ID);
                 Console.WriteLine(message);
-            
+
                 while (true)
                 {
                     try
                     {
                         message = GetMessage();
                         message = String.Format("{0}: {1}", userName, message);
-                        Console.WriteLine(message);
-                        server.BroadcastMessage(message, this.ID);
+                        //Console.WriteLine(message);
+                        if (message.Contains("|"))
+                        {
+                            string[] messageParts = message.Split("|");
+                            server.IndividualMessage(messageParts[0], this.ID, messageParts[1]);
+                        }
+                        else
+                        {
+                            server.BroadcastMessage(message, this.ID);
+                        }
                     }
                     catch
                     {
@@ -75,6 +86,18 @@ namespace ChatServer
             while (Stream.DataAvailable);
 
             return builder.ToString();
+        }
+        private int CountEqualNames(string userName)
+        {
+            int result = 0;
+            foreach(var t in server.clients)
+            {
+                if (t.userName == userName && t.ID != ID)
+                {
+                    result++;
+                }
+            }
+            return result;
         }
         protected internal void Close()
         {
