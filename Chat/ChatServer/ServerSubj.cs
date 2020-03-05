@@ -10,12 +10,12 @@ namespace ChatServer
 {
     class ServerSubj
     {
-        static TcpListener tcpListener;
+        static Socket listenSocket;
         internal List<ClientSubj> clients = new List<ClientSubj>();
 
-        static IPAddress remoteAddress; // хост для отправки данных
-        const int remotePort = 8888; // порт для отправки данных
-        const int localPort = 8888; // локальный порт для прослушивания входящих подключений
+        static IPAddress remoteAddress;
+        const int remotePort = 8888;
+        const int localPort = 8888;
 
         protected internal void AddConnection(ClientSubj clientSubj)
         {
@@ -32,17 +32,25 @@ namespace ChatServer
         }
         protected internal void Listen()
         {
+            IPEndPoint ipPoint = new IPEndPoint(IPAddress.Any, localPort);
+
+            // создаем сокет
+            listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             try
             {
-                tcpListener = new TcpListener(IPAddress.Any, localPort);
-                tcpListener.Start();
+                // связываем сокет с локальной точкой, по которой будем принимать данные
+                listenSocket.Bind(ipPoint);
+
+                // начинаем прослушивание
+                listenSocket.Listen(10);
+
                 Console.WriteLine("Сервер запущен. Ожидание подключений...");
 
                 while (true)
                 {
-                    TcpClient tcpClient = tcpListener.AcceptTcpClient();
-
-                    ClientSubj clientObject = new ClientSubj(tcpClient, this);
+                    Socket handler = listenSocket.Accept();
+                    // получаем сообщение
+                    ClientSubj clientObject = new ClientSubj(handler, this);
                     Thread clientThread = new Thread(new ThreadStart(clientObject.Process));
                     clientThread.Start();
                 }
@@ -94,23 +102,30 @@ namespace ChatServer
             byte[] data = Encoding.Unicode.GetBytes(message);
             for (int i = 0; i < clients.Count; i++)
             {
-                clients[i].Stream.Write(data, 0, data.Length);
-                //if (clients[i].ID != id)
-                //{
-                //}
+                //clients[i].Stream.Write(data, 0, data.Length);
+                clients[i].handler.Send(data);
             }
         }
         protected internal void IndividualMessage(string message, string id, string userName)
         {
             byte[] data = Encoding.Unicode.GetBytes(message);
-            clients.FirstOrDefault(p => p.userName.Trim() == userName.Trim())
-                .Stream.Write(data, 0, data.Length);
-            clients.FirstOrDefault(p => p.ID == id)
-                .Stream.Write(data, 0, data.Length);
+            ClientSubj client = clients.FirstOrDefault(p => p.userName.Trim() == userName.Trim());
+            client?.handler.Send(data);
+
+            if (client != null)
+            {
+                clients.FirstOrDefault(p => p.ID == id)
+                    .handler.Send(data);
+            }
+            else
+            {
+                clients.FirstOrDefault(p => p.ID == id)
+                    .handler.Send(Encoding.Unicode.GetBytes("Такого пользователя не существует"));
+            }
         }
         protected internal void Disconnect()
         {
-            tcpListener.Stop();
+            listenSocket.Close();
 
             for (int i = 0; i < clients.Count; i++)
             {

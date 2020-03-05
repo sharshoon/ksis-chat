@@ -7,15 +7,14 @@ namespace ChatServer
     class ClientSubj
     {
         protected internal string ID { get; private set; }
-        protected internal NetworkStream Stream { get; private set; }
-        internal string userName;
-        TcpClient client;
+        internal Socket handler;
+        internal string userName; 
         ServerSubj server;
 
-        public ClientSubj(TcpClient tcpClient, ServerSubj serverObject)
+        public ClientSubj(Socket handler, ServerSubj serverObject)
         {
             ID = Guid.NewGuid().ToString();
-            client = tcpClient;
+            this.handler = handler;
             server = serverObject;
             serverObject.AddConnection(this);
         }
@@ -24,8 +23,6 @@ namespace ChatServer
         {
             try
             {
-                Stream = client.GetStream();
-                // получаем имя пользователя
                 string message = GetMessage();
                 userName = message;
                 if (CountEqualNames(userName) != 0)
@@ -35,14 +32,13 @@ namespace ChatServer
                 message = userName + " вошел в чат!!!";
                 server.BroadcastMessage(message, this.ID);
                 Console.WriteLine(message);
-
-                while (true)
+                
+                while(true)
                 {
                     try
                     {
                         message = GetMessage();
                         message = String.Format("{0}: {1}", userName, message);
-                        //Console.WriteLine(message);
                         if (message.Contains("|"))
                         {
                             string[] messageParts = message.Split("|");
@@ -68,22 +64,22 @@ namespace ChatServer
             }
             finally
             {
-                // в случае выхода из цикла закрываем ресурсы
                 server.RemoveConnection(this.ID);
                 Close();
             }
         }
         private string GetMessage()
         {
-            byte[] data = new byte[64]; // буфер для получаемых данных
             StringBuilder builder = new StringBuilder();
             int bytes = 0;
+            byte[] data = new byte[256]; 
+
             do
             {
-                bytes = Stream.Read(data, 0, data.Length);
+                bytes = handler.Receive(data);
                 builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
             }
-            while (Stream.DataAvailable);
+            while (handler.Available > 0);
 
             return builder.ToString();
         }
@@ -101,10 +97,8 @@ namespace ChatServer
         }
         protected internal void Close()
         {
-            if (Stream != null)
-                Stream.Close();
-            if (client != null)
-                client.Close();
+            if (handler != null)
+                 handler.Close();
         }
     }
 }

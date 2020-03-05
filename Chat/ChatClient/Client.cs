@@ -2,10 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Windows.Forms;
 using System.Net.Sockets;
 using System.Threading;
@@ -20,29 +16,32 @@ namespace ChatClient
         private static string userName;
         private string host = "127.0.0.1";
         private int port = 8888;
-        private static TcpClient client;
-        private static NetworkStream stream;
+        //private static TcpClient client;
+        private Socket socket;
+        //private static NetworkStream stream;
         private TextBox tbChat;
         private Form1 Form;
 
         public void Login(string name, string ip, string port)
         {
             userName = name;
-            client = new TcpClient();
             this.host = ip;
             this.port = int.Parse(port);
            
             try
             {
-                client.Connect(this.host, this.port); //подключение клиента
-                stream = client.GetStream(); // получаем поток
+                IPEndPoint ipPoint = new IPEndPoint(IPAddress.Parse(this.host.ToString()), this.port);
+ 
+                socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                // подключаемся к удаленному хосту
+                socket.Connect(ipPoint);
+                string message = userName;
+                byte[] data = Encoding.Unicode.GetBytes(message);
+                socket.Send(data);
 
                 Thread receiveThread = new Thread(new ThreadStart(ReceiveMessage));
                 receiveThread.Start(); //старт потока
 
-                string message = userName;
-                byte[] data = Encoding.Unicode.GetBytes(message);
-                stream.Write(data, 0, data.Length);
             }
             catch (Exception ex)
             {
@@ -57,7 +56,7 @@ namespace ChatClient
                     String.Format(tbMessage.Text) :
                     String.Format(tbMessage.Text + "|" + tbReceiver.Text);
                 byte[] data = Encoding.Unicode.GetBytes(message);
-                stream.Write(data, 0, data.Length);
+                socket.Send(data);
                 tbMessage.Clear();
             }
             catch (Exception ex)
@@ -72,15 +71,16 @@ namespace ChatClient
             {
                 try
                 {
-                    byte[] data = new byte[64]; // буфер для получаемых данных
+                    byte[] data = new byte[256]; // буфер для ответа
                     StringBuilder builder = new StringBuilder();
-                    int bytes = 0;
+                    int bytes = 0; // количество полученных байт
+
                     do
                     {
-                        bytes = stream.Read(data, 0, data.Length);
+                        bytes = socket.Receive(data, data.Length, 0);
                         builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
                     }
-                    while (stream.DataAvailable);
+                    while (socket.Available > 0);
 
                     string message = builder.ToString();
 
@@ -107,11 +107,9 @@ namespace ChatClient
         public void Disconnect()
         {
             alive = false;
-            if (stream != null)
-                stream.Close();//отключение потока
-            if (client != null)
-                client.Close();//отключение клиента
-            //Environment.Exit(0); //завершение процесса
+            if (socket != null)
+                socket.Close();//отключение потока
+            Environment.Exit(0); //завершение процесса
         }
 
         public void SaveDialog()
@@ -121,11 +119,6 @@ namespace ChatClient
                 log.Write(tbChat.Text);
             }
         }
-        //public List<string> GetUsers()
-        //{
-        //    var result = new List<string>();
-            
-        //}
         public Client(TextBox tbChat, Form1 form)
         {
             Form = form;
