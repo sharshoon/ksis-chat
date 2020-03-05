@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using System.Net.Sockets;
 using System.Threading;
 using System.Net;
+using System.IO;
 
 namespace ChatClient
 {
@@ -23,13 +24,13 @@ namespace ChatClient
         private static NetworkStream stream;
         private TextBox tbChat;
         private Form1 Form;
+        private ComboBox cbServers;
+        private List<ServerInfo> servers = new List<ServerInfo>();
 
-        public void Login(string name, string ip, string port, TextBox tbChat, Form1 form)
+        public void Login(string name, string ip, string port)
         {
-            this.tbChat = tbChat;
             userName = name;
             client = new TcpClient();
-            Form = form;
             this.host = ip;
             this.port = int.Parse(port);
            
@@ -141,7 +142,7 @@ namespace ChatClient
                 while (true)
                 {
                     byte[] bytes = listener.Receive(ref groupEP);
-                    MessageBox.Show(Encoding.ASCII.GetString(bytes, 0, bytes.Length));
+                    AddServer(Encoding.ASCII.GetString(bytes, 0, bytes.Length));
                 }
             }
             catch (SocketException e)
@@ -153,6 +154,17 @@ namespace ChatClient
                 listener.Close();
             }
         }
+        private void AddServer(string server)
+        {
+            Form.Invoke(new MethodInvoker(() =>
+            {
+                string[] args = server.Split(',');
+                servers.Add(new ServerInfo { Name = args.FirstOrDefault(), Port = args.LastOrDefault() });
+                MessageBox.Show(servers[0].Name);
+                cbServers.DataSource = servers;
+                cbServers.DisplayMember = "Name";
+            }));
+        }
         public void Disconnect()
         {
             alive = false;
@@ -163,5 +175,19 @@ namespace ChatClient
             //Environment.Exit(0); //завершение процесса
         }
 
+        public void SaveDialog()
+        {
+            using(StreamWriter log = new StreamWriter("log.txt", false))
+            {
+                log.Write(tbChat.Text);
+            }
+        }
+
+        public Client(TextBox tbChat, Form1 form, ComboBox cbServers)
+        {
+            Form = form;
+            this.tbChat = tbChat;
+            this.cbServers = cbServers;
+        }
     }
 }

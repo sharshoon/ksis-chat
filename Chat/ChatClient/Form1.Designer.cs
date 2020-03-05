@@ -41,6 +41,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.btnFindServer = new System.Windows.Forms.Button();
             this.cbServers = new System.Windows.Forms.ComboBox();
+            this.btnSaveHistory = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // tbMessage
@@ -151,18 +152,29 @@
             // 
             // cbServers
             // 
-            this.cbServers.Enabled = false;
             this.cbServers.FormattingEnabled = true;
             this.cbServers.Location = new System.Drawing.Point(13, 50);
             this.cbServers.Name = "cbServers";
             this.cbServers.Size = new System.Drawing.Size(536, 24);
             this.cbServers.TabIndex = 12;
+            this.cbServers.SelectionChangeCommitted += new System.EventHandler(this.cbServers_SelectionChangeCommitted);
+            // 
+            // btnSaveHistory
+            // 
+            this.btnSaveHistory.Location = new System.Drawing.Point(3, 536);
+            this.btnSaveHistory.Name = "btnSaveHistory";
+            this.btnSaveHistory.Size = new System.Drawing.Size(549, 31);
+            this.btnSaveHistory.TabIndex = 13;
+            this.btnSaveHistory.Text = "Скачать историю";
+            this.btnSaveHistory.UseVisualStyleBackColor = true;
+            this.btnSaveHistory.Click += new System.EventHandler(this.btnSaveHistory_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(561, 533);
+            this.ClientSize = new System.Drawing.Size(561, 571);
+            this.Controls.Add(this.btnSaveHistory);
             this.Controls.Add(this.cbServers);
             this.Controls.Add(this.btnFindServer);
             this.Controls.Add(this.label3);
@@ -199,6 +211,7 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button btnFindServer;
         private System.Windows.Forms.ComboBox cbServers;
+        private System.Windows.Forms.Button btnSaveHistory;
     }
 }
 
