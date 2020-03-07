@@ -22,24 +22,23 @@ namespace ChatClient
         private ComboBox cbServers;
         private const int listenPort = 9119;
         private List<ServerInfo> servers = new List<ServerInfo>();
-        UdpClient listener;
-
+        Socket listenSocket;
+        IPEndPoint groupEP;
         public void BroadCastRequest()
         {
-            if (listener == null)
+            if (listenSocket == null)
             {
-                listener = new UdpClient(listenPort);
+                listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                Thread receiveUdp = new Thread(new ThreadStart(ReceiveUdpMessage));
+                receiveUdp.Start();
             }
-
-            Thread receiveUdp = new Thread(new ThreadStart(ReceiveUdpMessage));
-            receiveUdp.Start();
+            
 
             var host = Dns.GetHostEntry(Dns.GetHostName());
             var ip = host.AddressList.FirstOrDefault(p => p.AddressFamily == AddressFamily.InterNetwork);
             byte[] ipBytes = ip.GetAddressBytes();
             ipBytes[ipBytes.Length - 1] = 255;
             IPAddress broadcast = new IPAddress(ipBytes);
-            Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
             List<byte> buf = new List<byte> { };
             foreach (var t in ip.GetAddressBytes())
@@ -54,26 +53,52 @@ namespace ChatClient
 
             byte[] sendbuf = buf.ToArray();
             IPEndPoint ep = new IPEndPoint(broadcast, 11000);
-            s.SendTo(sendbuf, ep);
+            listenSocket.SendTo(sendbuf, ep);
         }
         public void ReceiveUdpMessage()
         {
-            IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
+            groupEP = new IPEndPoint(IPAddress.Any, listenPort);
             try
             {
+                //Прослушиваем по адресу
+                
+                listenSocket.Bind(groupEP);
+
                 while (true)
                 {
-                    byte[] bytes = listener.Receive(ref groupEP);
-                    AddServer(Encoding.ASCII.GetString(bytes, 0, bytes.Length));
+                    // получаем сообщение
+                    StringBuilder builder = new StringBuilder();
+                    int bytes = 0; // количество полученных байтов
+                    byte[] data = new byte[256]; // буфер для получаемых данных
+
+                    //адрес, с которого пришли данные
+                    EndPoint remoteIp = new IPEndPoint(IPAddress.Any, 0);
+
+                    do
+                    {
+                        bytes = listenSocket.ReceiveFrom(data, ref remoteIp);
+                        builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
+                    }
+                    while (listenSocket.Available > 0);
+                    AddServer(Encoding.ASCII.GetString(data, 0, data.Length));    
                 }
             }
-            catch (SocketException e)
+            catch (Exception ex)
             {
-                Console.WriteLine(e);
+                MessageBox.Show(ex.Message);
             }
             finally
             {
-                listener.Close();
+                Close();
+            }
+        }
+        private void Close()
+        {
+            if (listenSocket != null)
+            {
+                listenSocket.Shutdown(SocketShutdown.Both);
+                listenSocket.Close();
+                listenSocket = null;
             }
         }
         private void AddServer(string server)

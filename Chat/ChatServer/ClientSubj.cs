@@ -29,7 +29,7 @@ namespace ChatServer
                 {
                     userName = userName + $"({CountEqualNames(userName).ToString()})";
                 }
-                message = userName + " вошел в чат!!!";
+                message = userName + " вошел в чат";
                 server.BroadcastMessage(message, this.ID);
                 Console.WriteLine(message);
                 
@@ -43,10 +43,12 @@ namespace ChatServer
                         {
                             string[] messageParts = message.Split("|");
                             server.IndividualMessage(messageParts[0], this.ID, messageParts[1]);
+                            Console.WriteLine(messageParts[0]);
                         }
                         else
                         {
                             server.BroadcastMessage(message, this.ID);
+                            Console.WriteLine(message);
                         }
                     }
                     catch

@@ -64,37 +64,56 @@ namespace ChatServer
         protected internal void ReceiveUdpMessage()
         {
             int listenPort = 11000;
-
-            UdpClient listener = new UdpClient(listenPort);
+            Socket listeningSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
-
             try
             {
+                //Прослушиваем по адресу
+                listeningSocket.Bind(groupEP);
+
                 while (true)
                 {
-                    Console.WriteLine("Waiting for broadcast");
-                    byte[] bytes = listener.Receive(ref groupEP);
+                    //Console.WriteLine("Waiting for broadcast");
+                    // получаем сообщение
+                    StringBuilder builder = new StringBuilder();
+                    int bytes = 0; // количество полученных байтов
+                    byte[] data = new byte[256]; // буфер для получаемых данных
 
-                    Console.WriteLine($"Received broadcast from {groupEP} :");
-                    //Console.WriteLine($" {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
+                    //адрес, с которого пришли данные
+                    EndPoint remoteIp = new IPEndPoint(IPAddress.Any, 0);
+
+                    do
+                    {
+                        bytes = listeningSocket.ReceiveFrom(data, ref remoteIp);
+                        builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
+                    }
+                    while (listeningSocket.Available > 0);
+                    // получаем данные о подключении
+                    IPEndPoint remoteFullIp = remoteIp as IPEndPoint;
 
                     int remoteUdpPort = 9119;
                     Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                    IPEndPoint ep = new IPEndPoint(groupEP.Address, remoteUdpPort);
+                    
+                    IPEndPoint ep = new IPEndPoint(remoteFullIp.Address, remoteUdpPort);
 
                     var host = Dns.GetHostEntry(Dns.GetHostName());
                     string IP = host.AddressList.FirstOrDefault(p => p.AddressFamily == AddressFamily.InterNetwork).ToString();
-                    byte[] sendbuf = Encoding.ASCII.GetBytes(IP + ","+ remotePort.ToString());
+                    byte[] sendbuf = Encoding.ASCII.GetBytes(IP + "," + remotePort.ToString());
                     s.SendTo(sendbuf, ep);
                 }
             }
-            catch (SocketException e)
+            catch (Exception ex)
             {
-                Console.WriteLine(e);
+                Console.WriteLine(ex.Message);
             }
             finally
             {
-                listener.Close();
+                if (listeningSocket != null)
+                {
+                    listeningSocket.Shutdown(SocketShutdown.Both);
+                    listeningSocket.Close();
+                    listeningSocket = null;
+                }
             }
         }
         protected internal void BroadcastMessage(string message, string id)
@@ -102,7 +121,6 @@ namespace ChatServer
             byte[] data = Encoding.Unicode.GetBytes(message);
             for (int i = 0; i < clients.Count; i++)
             {
-                //clients[i].Stream.Write(data, 0, data.Length);
                 clients[i].handler.Send(data);
             }
         }
