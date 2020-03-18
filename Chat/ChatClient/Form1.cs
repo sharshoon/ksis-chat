@@ -17,13 +17,13 @@ namespace ChatClient
     {
 
         Client user;
-        Broadcast broadcast;
+        ServersFinder broadcast;
 
         public Form1()
         {
             InitializeComponent();
-            user = new Client(tbChat, this);
-            broadcast = new Broadcast(this, cbServers);
+            user = new Client(tbChat, this, cbChooseUser);
+            broadcast = new ServersFinder(this, cbServers);
         }
 
         private void btnLogin_Click(object sender, EventArgs e)
@@ -32,7 +32,7 @@ namespace ChatClient
         } 
         private void btnSend_Click(object sender, EventArgs e)
         {
-            user.SendMessage(tbMessage, tbReceiver);
+            user.SendMessage(tbMessage);
         }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
@@ -47,7 +47,7 @@ namespace ChatClient
 
         private void btnFindServer_Click(object sender, EventArgs e)
         {
-            broadcast.BroadCastRequest();
+            broadcast.FindServersRequest();
         }
 
         private void cbServers_SelectionChangeCommitted(object sender, EventArgs e)
@@ -58,13 +58,22 @@ namespace ChatClient
 
         private void btnSaveHistory_Click(object sender, EventArgs e)
         {
-            user.SaveDialog();
+            tbChat.Clear();
+            user.GetDialogHistory();
         }
 
         private void btnUsersFind_Click(object sender, EventArgs e)
         {
             tbChat.Clear();
-            user.SendMessage(tbMessage, tbReceiver);
+            user.GetIndividualDialogHistory();
+            // user.SendMessage(tbMessage);
+        }
+
+        private void btnMainChat_Click(object sender, EventArgs e)
+        {
+            cbChooseUser.Text = "";
+            tbChat.Clear();
+            user.GetDialogHistory();
         }
     }
 }

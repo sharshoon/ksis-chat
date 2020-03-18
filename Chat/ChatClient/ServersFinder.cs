@@ -14,7 +14,7 @@ using System.IO;
 
 namespace ChatClient
 {
-    class Broadcast
+    class ServersFinder
     {
         private string host = "127.0.0.1";
         private int port = 8888;
@@ -24,44 +24,42 @@ namespace ChatClient
         private List<ServerInfo> servers = new List<ServerInfo>();
         Socket listenSocket;
         IPEndPoint groupEP;
-        public void BroadCastRequest()
+        public void FindServersRequest()
         {
             if (listenSocket == null)
             {
                 listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                Thread receiveUdp = new Thread(new ThreadStart(ReceiveUdpMessage));
+                Thread receiveUdp = new Thread(new ThreadStart(ReceiveServersInformation));
                 receiveUdp.Start();
             }
             
-
             var host = Dns.GetHostEntry(Dns.GetHostName());
             var ip = host.AddressList.FirstOrDefault(p => p.AddressFamily == AddressFamily.InterNetwork);
             byte[] ipBytes = ip.GetAddressBytes();
             ipBytes[ipBytes.Length - 1] = 255;
             IPAddress broadcast = new IPAddress(ipBytes);
 
-            List<byte> buf = new List<byte> { };
+            List<byte> buffer = new List<byte> { };
             foreach (var t in ip.GetAddressBytes())
             {
-                buf.Add(t);
+                buffer.Add(t);
             }
 
             foreach (var t in port.ToString())
             {
-                buf.Add(byte.Parse(t.ToString()));
+                buffer.Add(byte.Parse(t.ToString()));
             }
 
-            byte[] sendbuf = buf.ToArray();
+            byte[] sendbuffer = buffer.ToArray();
             IPEndPoint ep = new IPEndPoint(broadcast, 11000);
-            listenSocket.SendTo(sendbuf, ep);
+            listenSocket.SendTo(sendbuffer, ep);
         }
-        public void ReceiveUdpMessage()
+        public void ReceiveServersInformation()
         {
             groupEP = new IPEndPoint(IPAddress.Any, listenPort);
             try
             {
                 //Прослушиваем по адресу
-                
                 listenSocket.Bind(groupEP);
 
                 while (true)
@@ -111,7 +109,7 @@ namespace ChatClient
                 cbServers.DisplayMember = "Name";
             }));
         }
-        public Broadcast(Form1 form, ComboBox cbServers)
+        public ServersFinder(Form1 form, ComboBox cbServers)
         {
             Form = form;
             this.cbServers = cbServers;

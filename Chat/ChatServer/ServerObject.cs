@@ -5,52 +5,55 @@ using System.Net.Sockets;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 
 namespace ChatServer
 {
-    class ServerSubj
+    class ServerObject
     {
         static Socket listenSocket;
-        internal List<ClientSubj> clients = new List<ClientSubj>();
+        internal ObservableCollection<ClientObject> clients = new ObservableCollection<ClientObject>();
+        internal List<string> mainChannelMessageHistory = new List<string>();
 
         static IPAddress remoteAddress;
         const int remotePort = 8888;
         const int localPort = 8888;
-
-        protected internal void AddConnection(ClientSubj clientSubj)
+        static object locker = new object();
+        internal void AddConnection(ClientObject clientSubj)
         {
             clients.Add(clientSubj);
         }
         protected internal void RemoveConnection(string id)
         {
-            ClientSubj client = clients.FirstOrDefault(c => c.ID == id);
+            ClientObject client = clients.FirstOrDefault(c => c.ID == id);
 
             if (client != null)
             {
                 clients.Remove(client);
             }
         }
-        protected internal void Listen()
+        internal void Listen()
         {
             IPEndPoint ipPoint = new IPEndPoint(IPAddress.Any, localPort);
-
             // создаем сокет
             listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             try
             {
                 // связываем сокет с локальной точкой, по которой будем принимать данные
                 listenSocket.Bind(ipPoint);
-
                 // начинаем прослушивание
                 listenSocket.Listen(10);
-
                 Console.WriteLine("Сервер запущен. Ожидание подключений...");
+
+                clients.CollectionChanged += ClientsCollectionChanged;
 
                 while (true)
                 {
                     Socket handler = listenSocket.Accept();
                     // получаем сообщение
-                    ClientSubj clientObject = new ClientSubj(handler, this);
+                    ClientObject clientObject = new ClientObject(handler, this);
+
                     Thread clientThread = new Thread(new ThreadStart(clientObject.Process));
                     clientThread.Start();
                 }
@@ -59,9 +62,22 @@ namespace ChatServer
             {
                 Console.WriteLine(ex.Message);
                 Disconnect();
+                ProgramExit();
             }
         }
-        protected internal void ReceiveUdpMessage()
+        private void ClientsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            string users = "";
+            foreach(var client in clients)
+            {
+                if (client.userName != null)
+                {
+                    users += client.userName + "," + client.ID + "|";   
+                }
+            }
+            GeneralMessage(users);
+        }
+        internal void ReceiveUdpMessage()
         {
             int listenPort = 11000;
             Socket listeningSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -73,7 +89,6 @@ namespace ChatServer
 
                 while (true)
                 {
-                    //Console.WriteLine("Waiting for broadcast");
                     // получаем сообщение
                     StringBuilder builder = new StringBuilder();
                     int bytes = 0; // количество полученных байтов
@@ -116,32 +131,49 @@ namespace ChatServer
                 }
             }
         }
-        protected internal void BroadcastMessage(string message, string id)
+        internal void GeneralMessage(string message)
         {
             byte[] data = Encoding.Unicode.GetBytes(message);
             for (int i = 0; i < clients.Count; i++)
             {
-                clients[i].handler.Send(data);
+                clients[i]?.handler.Send(data);
             }
         }
-        protected internal void IndividualMessage(string message, string id, string userName)
+        internal void IndividualMessage(string message, string IDSender, string IDReceiver)
         {
-            byte[] data = Encoding.Unicode.GetBytes(message);
-            ClientSubj client = clients.FirstOrDefault(p => p.userName.Trim() == userName.Trim());
+            byte[] data = Encoding.Unicode.GetBytes($"[{IDSender}]"+message);
+            ClientObject client = clients.FirstOrDefault(p => p.ID.Trim() == IDReceiver.Trim());
             client?.handler.Send(data);
 
-            if (client != null)
+            if (client != null && (IDSender != IDReceiver))
             {
-                clients.FirstOrDefault(p => p.ID == id)
-                    .handler.Send(data);
+                clients.FirstOrDefault(p => p.ID == IDSender)
+                    .handler.Send(Encoding.Unicode.GetBytes(message));
             }
-            else
+            else if (client == null)
             {
-                clients.FirstOrDefault(p => p.ID == id)
+                clients.FirstOrDefault(p => p.ID == IDSender)
                     .handler.Send(Encoding.Unicode.GetBytes("Такого пользователя не существует"));
             }
         }
-        protected internal void Disconnect()
+        internal void SendChatHistory(string message, string IDSender, string IDReceiver)
+        {
+            clients.FirstOrDefault(p => p.ID == IDSender)
+                    .handler.Send(Encoding.Unicode.GetBytes(message));
+            Console.WriteLine(message);
+        }
+        internal void SendMainChannelMessageHistory()
+        {
+            foreach (var message in mainChannelMessageHistory)
+            {
+                byte[] data = Encoding.Unicode.GetBytes(message);
+                for (int i = 0; i < clients.Count; i++)
+                {
+                    clients[i].handler.Send(data);
+                }
+            }
+        }
+        internal void Disconnect()
         {
             listenSocket.Close();
 
@@ -149,6 +181,9 @@ namespace ChatServer
             {
                 clients[i].Close();
             }
+        }
+        internal void ProgramExit()
+        {
             Environment.Exit(0);
         }
     }

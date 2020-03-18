@@ -5,13 +5,13 @@ namespace ChatServer
 {
     class Program
     {
-        static ServerSubj server;
+        static ServerObject server;
         static Thread listenThread;
         static void Main(string[] args)
         {
             try
             {
-                server = new ServerSubj();
+                server = new ServerObject();
                 listenThread = new Thread(new ThreadStart(server.Listen));
                 listenThread.Start();
 
@@ -21,6 +21,7 @@ namespace ChatServer
             catch (Exception ex)
             {
                 server.Disconnect();
+                server.ProgramExit();
                 Console.WriteLine(ex.Message);
             }
         }

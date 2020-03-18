@@ -45,6 +45,7 @@
             this.cbChooseUser = new System.Windows.Forms.ComboBox();
             this.btnReceiver = new System.Windows.Forms.Button();
             this.tbReceiver = new System.Windows.Forms.TextBox();
+            this.btnMainChat = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // tbMessage
@@ -175,33 +176,44 @@
             // cbChooseUser
             // 
             this.cbChooseUser.FormattingEnabled = true;
-            this.cbChooseUser.Location = new System.Drawing.Point(570, 195);
+            this.cbChooseUser.Location = new System.Drawing.Point(307, 64);
             this.cbChooseUser.Name = "cbChooseUser";
-            this.cbChooseUser.Size = new System.Drawing.Size(239, 24);
+            this.cbChooseUser.Size = new System.Drawing.Size(245, 24);
             this.cbChooseUser.TabIndex = 14;
             // 
             // btnReceiver
             // 
             this.btnReceiver.Location = new System.Drawing.Point(307, 12);
             this.btnReceiver.Name = "btnReceiver";
-            this.btnReceiver.Size = new System.Drawing.Size(245, 46);
+            this.btnReceiver.Size = new System.Drawing.Size(128, 46);
             this.btnReceiver.TabIndex = 15;
-            this.btnReceiver.Text = "Отправлять сообщения этому пользователю";
+            this.btnReceiver.Text = "Личные сообщения";
             this.btnReceiver.UseVisualStyleBackColor = true;
             this.btnReceiver.Click += new System.EventHandler(this.btnUsersFind_Click);
             // 
             // tbReceiver
             // 
-            this.tbReceiver.Location = new System.Drawing.Point(307, 65);
+            this.tbReceiver.Location = new System.Drawing.Point(570, 65);
             this.tbReceiver.Name = "tbReceiver";
             this.tbReceiver.Size = new System.Drawing.Size(245, 22);
             this.tbReceiver.TabIndex = 16;
+            // 
+            // btnMainChat
+            // 
+            this.btnMainChat.Location = new System.Drawing.Point(441, 12);
+            this.btnMainChat.Name = "btnMainChat";
+            this.btnMainChat.Size = new System.Drawing.Size(106, 46);
+            this.btnMainChat.TabIndex = 17;
+            this.btnMainChat.Text = "Общий чат";
+            this.btnMainChat.UseVisualStyleBackColor = true;
+            this.btnMainChat.Click += new System.EventHandler(this.btnMainChat_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(564, 591);
+            this.ClientSize = new System.Drawing.Size(559, 591);
+            this.Controls.Add(this.btnMainChat);
             this.Controls.Add(this.tbReceiver);
             this.Controls.Add(this.btnReceiver);
             this.Controls.Add(this.cbChooseUser);
@@ -246,6 +258,7 @@
         private System.Windows.Forms.ComboBox cbChooseUser;
         private System.Windows.Forms.Button btnReceiver;
         private System.Windows.Forms.TextBox tbReceiver;
+        private System.Windows.Forms.Button btnMainChat;
     }
 }
 
