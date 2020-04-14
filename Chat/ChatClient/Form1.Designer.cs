@@ -44,8 +44,11 @@
             this.btnSaveHistory = new System.Windows.Forms.Button();
             this.cbChooseUser = new System.Windows.Forms.ComboBox();
             this.btnReceiver = new System.Windows.Forms.Button();
-            this.tbReceiver = new System.Windows.Forms.TextBox();
             this.btnMainChat = new System.Windows.Forms.Button();
+            this.btnPinFile = new System.Windows.Forms.Button();
+            this.lwChat = new System.Windows.Forms.ListView();
+            this.rtbMessage = new System.Windows.Forms.RichTextBox();
+            this.PinFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.SuspendLayout();
             // 
             // tbMessage
@@ -68,7 +71,7 @@
             // 
             // tbChat
             // 
-            this.tbChat.Location = new System.Drawing.Point(3, 172);
+            this.tbChat.Location = new System.Drawing.Point(649, 142);
             this.tbChat.Multiline = true;
             this.tbChat.Name = "tbChat";
             this.tbChat.Size = new System.Drawing.Size(549, 314);
@@ -167,7 +170,7 @@
             // 
             this.btnSaveHistory.Location = new System.Drawing.Point(3, 551);
             this.btnSaveHistory.Name = "btnSaveHistory";
-            this.btnSaveHistory.Size = new System.Drawing.Size(549, 31);
+            this.btnSaveHistory.Size = new System.Drawing.Size(286, 31);
             this.btnSaveHistory.TabIndex = 13;
             this.btnSaveHistory.Text = "Скачать историю";
             this.btnSaveHistory.UseVisualStyleBackColor = true;
@@ -191,13 +194,6 @@
             this.btnReceiver.UseVisualStyleBackColor = true;
             this.btnReceiver.Click += new System.EventHandler(this.btnUsersFind_Click);
             // 
-            // tbReceiver
-            // 
-            this.tbReceiver.Location = new System.Drawing.Point(570, 65);
-            this.tbReceiver.Name = "tbReceiver";
-            this.tbReceiver.Size = new System.Drawing.Size(245, 22);
-            this.tbReceiver.TabIndex = 16;
-            // 
             // btnMainChat
             // 
             this.btnMainChat.Location = new System.Drawing.Point(441, 12);
@@ -208,13 +204,42 @@
             this.btnMainChat.UseVisualStyleBackColor = true;
             this.btnMainChat.Click += new System.EventHandler(this.btnMainChat_Click);
             // 
+            // btnPinFile
+            // 
+            this.btnPinFile.Location = new System.Drawing.Point(295, 551);
+            this.btnPinFile.Name = "btnPinFile";
+            this.btnPinFile.Size = new System.Drawing.Size(257, 31);
+            this.btnPinFile.TabIndex = 18;
+            this.btnPinFile.Text = "Прикрепить файл";
+            this.btnPinFile.UseVisualStyleBackColor = true;
+            // 
+            // lwChat
+            // 
+            this.lwChat.HideSelection = false;
+            this.lwChat.Location = new System.Drawing.Point(3, 172);
+            this.lwChat.Name = "lwChat";
+            this.lwChat.Size = new System.Drawing.Size(549, 314);
+            this.lwChat.TabIndex = 19;
+            this.lwChat.UseCompatibleStateImageBehavior = false;
+            this.lwChat.View = System.Windows.Forms.View.List;
+            // 
+            // rtbMessage
+            // 
+            this.rtbMessage.Location = new System.Drawing.Point(3, 492);
+            this.rtbMessage.Name = "rtbMessage";
+            this.rtbMessage.Size = new System.Drawing.Size(401, 53);
+            this.rtbMessage.TabIndex = 20;
+            this.rtbMessage.Text = "";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(559, 591);
+            this.ClientSize = new System.Drawing.Size(567, 591);
+            this.Controls.Add(this.rtbMessage);
+            this.Controls.Add(this.lwChat);
+            this.Controls.Add(this.btnPinFile);
             this.Controls.Add(this.btnMainChat);
-            this.Controls.Add(this.tbReceiver);
             this.Controls.Add(this.btnReceiver);
             this.Controls.Add(this.cbChooseUser);
             this.Controls.Add(this.btnSaveHistory);
@@ -257,8 +282,11 @@
         private System.Windows.Forms.Button btnSaveHistory;
         private System.Windows.Forms.ComboBox cbChooseUser;
         private System.Windows.Forms.Button btnReceiver;
-        private System.Windows.Forms.TextBox tbReceiver;
         private System.Windows.Forms.Button btnMainChat;
+        private System.Windows.Forms.Button btnPinFile;
+        private System.Windows.Forms.ListView lwChat;
+        private System.Windows.Forms.RichTextBox rtbMessage;
+        private System.Windows.Forms.OpenFileDialog PinFileDialog;
     }
 }
 

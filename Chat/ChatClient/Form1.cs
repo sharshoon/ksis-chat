@@ -22,8 +22,9 @@ namespace ChatClient
         public Form1()
         {
             InitializeComponent();
-            user = new Client(tbChat, this, cbChooseUser);
+            user = new Client(lwChat, this, cbChooseUser);
             broadcast = new ServersFinder(this, cbServers);
+            btnPinFile.Click += (sender, e) => user.PinFiles(PinFileDialog, rtbMessage);
         }
 
         private void btnLogin_Click(object sender, EventArgs e)
@@ -32,7 +33,7 @@ namespace ChatClient
         } 
         private void btnSend_Click(object sender, EventArgs e)
         {
-            user.SendMessage(tbMessage);
+            user.SendMessage(rtbMessage);
         }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
@@ -58,13 +59,15 @@ namespace ChatClient
 
         private void btnSaveHistory_Click(object sender, EventArgs e)
         {
-            tbChat.Clear();
+            //tbChat.Clear();
+            lwChat.Clear();
             user.GetDialogHistory();
         }
 
         private void btnUsersFind_Click(object sender, EventArgs e)
         {
-            tbChat.Clear();
+            //tbChat.Clear();
+            lwChat.Clear();
             user.GetIndividualDialogHistory();
             // user.SendMessage(tbMessage);
         }
@@ -72,7 +75,8 @@ namespace ChatClient
         private void btnMainChat_Click(object sender, EventArgs e)
         {
             cbChooseUser.Text = "";
-            tbChat.Clear();
+            //tbChat.Clear();
+            lwChat.Clear();
             user.GetDialogHistory();
         }
     }
