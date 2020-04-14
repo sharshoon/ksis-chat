@@ -59,56 +59,6 @@ namespace ChatServer
                         {
                             // Ошибка, нет такой команды
                             throw new Exception("Неопознанная команда");
-
-                            //var oldMessage = message;
-                            //message = String.Format("{0}: {1}", userName, message);
-
-                            //string getChatHistoryCommand = "GetHistoryCommand";
-                            //if (message.Contains(getChatHistoryCommand))
-                            //{
-                            //    foreach (var messageFromHistory in server.mainChannelMessageHistory)
-                            //    {
-                            //        string[] messageParts = message.Split("|");
-                            //        server.SendChatHistory(messageFromHistory, this.ID, messageParts[1]);
-                            //        Thread.Sleep(150);
-                            //    }
-                            //}
-                            //else if (message.Contains("GIHC"))
-                            //{
-                            //    string ID = message.Substring(message.IndexOf("[") + 1,
-                            //    message.IndexOf("]") - message.IndexOf("[") - 1);
-                            //    ClientObject ChatClient = server.clients.FirstOrDefault(p => p.ID == ID);
-                            //    ChatHistoryInfo chat = ChatClient.dialogs.FirstOrDefault(p => p.ID == this.ID);
-
-                            //    if (chat != null)
-                            //    {
-                            //        foreach (var messageFromHistory in chat.messages)
-                            //        {
-                            //            string[] messageParts = message.Split("|");
-                            //            server.SendChatHistory(messageFromHistory, this.ID, messageParts[1]);
-                            //            Thread.Sleep(150);
-                            //        }
-                            //    }
-                            //}
-                            //else if (String.Join("", oldMessage.Trim().Take(3)) == "000")
-                            //{
-                            //    server.GeneralMessage(oldMessage);
-                            //    server.mainChannelMessageHistory.Add(oldMessage);
-                            //    Console.WriteLine(oldMessage);
-                            //}
-                            //else if (message.Contains("|"))
-                            //{
-                            //    string[] messageParts = message.Split("|");
-                            //    server.IndividualMessage(messageParts[0], this.ID, messageParts[1]);
-                            //    WriteHistoryDialog(messageParts[0], messageParts[1]);
-                            //    Console.WriteLine(messageParts[0]);
-                            //}
-                            //else
-                            //{
-                            //    server.GeneralMessage(message);
-                            //    server.mainChannelMessageHistory.Add(message);
-                            //    Console.WriteLine(message);
-                            //}
                         }
                     }
                     catch
@@ -137,8 +87,6 @@ namespace ChatServer
             int bytes = 0;
             byte[] data = new byte[10000]; // tut
 
-            //do
-            //{
             byte[] lengthData = new byte[4];
             handler.Receive(lengthData);
             length = BitConverter.ToInt32(lengthData);
@@ -148,24 +96,10 @@ namespace ChatServer
 
             bytes = handler.Receive(data, length, SocketFlags.None);
             builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
-            
-            //}
-            //while (handler.Available > 0);
-
+           
             return builder.ToString();
         }
-        //private int CountEqualNames(string userName)
-        //{
-        //    int result = 0;
-        //    foreach(var t in server.clients)
-        //    {
-        //        if (t.userName == userName && t.ID != ID)
-        //        {
-        //            result++;
-        //        }
-        //    }
-        //    return result;
-        //}
+        
         public void WriteHistoryDialog(string message, string ID)
         {
             ChatHistoryInfo dialog = this.dialogs.FirstOrDefault(p => p.ID == ID);

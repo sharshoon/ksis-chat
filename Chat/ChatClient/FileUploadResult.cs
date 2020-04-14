@@ -1,4 +1,6 @@
-﻿namespace ChatClient
+﻿using System.Windows.Forms;
+
+namespace ChatClient
 {
     internal class FileUploadResult
     {

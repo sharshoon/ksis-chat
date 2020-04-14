@@ -25,6 +25,7 @@ namespace ChatClient
             user = new Client(lwChat, this, cbChooseUser);
             broadcast = new ServersFinder(this, cbServers);
             btnPinFile.Click += (sender, e) => user.PinFiles(PinFileDialog, rtbMessage);
+            tsmiSaveFile.Click += (sender, e) => user.SaveFile(lwChat.SelectedItems, SaveFileDialog);
         }
 
         private void btnLogin_Click(object sender, EventArgs e)

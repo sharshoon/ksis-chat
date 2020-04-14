@@ -12,6 +12,7 @@ using System.Net.Http.Headers;
 using Newtonsoft.Json;
 using System.Drawing;
 using ChatClient.Commands;
+using static System.Windows.Forms.ListView;
 
 namespace ChatClient
 {
@@ -27,6 +28,7 @@ namespace ChatClient
         public Form1 Form;
         public List<UserInfo> users = new List<UserInfo>();
         public List<FileUploadResult> PinedFiles = new List<FileUploadResult>();
+        public List<ReceivedFileInfo> ReceivedFiles = new List<ReceivedFileInfo>();
         public string fileServiceUrl = "https://localhost:44328";
 
         public void Login(string name, string ip, string port)
@@ -51,7 +53,6 @@ namespace ChatClient
                 byte[] data = Encoding.Unicode.GetBytes(message);
                 byte[] length = BitConverter.GetBytes(data.Length);
                 byte[] command = { 1 };
-                //byte[] fulldata = length.Union<byte>(length).Union<byte>(data).ToArray();
                 byte[] fulldata = length.Concat(command).Concat(data).ToArray();
                 socket.Send(fulldata);
             }
@@ -64,6 +65,27 @@ namespace ChatClient
         {
             try
             {
+                foreach (var file in PinedFiles)
+                {
+                    if (tbMessage.Text.Contains($"{file.fileName}"))
+                    {
+                        byte[] fileCommand = new byte[] { 0 };
+                        byte[] filedata = Encoding.Unicode.GetBytes(PinedFiles.FirstOrDefault(p => p.fileName == file.fileName).Id + file.fileName);
+                        byte[] fileDataLength = BitConverter.GetBytes(filedata.Length);
+
+                        byte[] fullFileData = fileDataLength.Concat(fileCommand).Concat(filedata).ToArray();
+                        socket.Send(fullFileData);
+
+                        var newMessage = tbMessage.Text.Remove(tbMessage.Text.IndexOf(file.fileName), file.fileName.Length);
+                        tbMessage.Text = newMessage;
+                    }
+                }
+                
+                if (String.IsNullOrWhiteSpace(tbMessage.Text))
+                {
+                    return;
+                }
+
                 byte[] command;
                 string message;
                 if(cbChooseUser.Text.Trim() == "")
@@ -73,8 +95,6 @@ namespace ChatClient
                 }
                 else
                 {
-                    // old variant
-                    //message = String.Format(tbMessage.Text + "|" +(((UserInfo)cbChooseUser.SelectedItem).ID));
                     message = String.Format(((UserInfo)cbChooseUser.SelectedItem).ID + tbMessage.Text);
                     command = new byte[] { 2 };
                 }
@@ -85,18 +105,6 @@ namespace ChatClient
                 byte[] fulldata = length.Concat(command).Concat(data).ToArray();
                 socket.Send(fulldata);
 
-                foreach(var file in PinedFiles)
-                {
-                    if (tbMessage.Text.Contains($"{file.fileName}"))
-                    {
-                        byte[] fileCommand = new byte[] { 0 };
-                        byte[] filedata = Encoding.Unicode.GetBytes(PinedFiles.FirstOrDefault(p => p.fileName == file.fileName).Id+file.fileName);
-                        byte[] fileDataLength = BitConverter.GetBytes(filedata.Length);
-
-                        byte[] fullFileData = fileDataLength.Concat(fileCommand).Concat(filedata).ToArray();
-                        socket.Send(fullFileData);
-                    }
-                }
                 tbMessage.Clear();
             }
             catch (Exception ex)
@@ -127,11 +135,6 @@ namespace ChatClient
                     bytes = socket.Receive(data, length, SocketFlags.None);
                     builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
 
-                    //bytes = socket.Receive(data, data.Length, 0);
-                    //builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
-                    //}
-                    //while (socket.Available > 0);
-
                     string message = builder.ToString();
 
                     Api api = new Api();
@@ -144,44 +147,6 @@ namespace ChatClient
                     else
                     {
                         throw new Exception("Незнакомая команда");
-                        //if (message.Contains('|'))
-                        //{
-                        //    string[] messageParts = message.Split('|');
-                        //    ChangeUsersList(messageParts);
-                        //}
-                        //else if (String.Join("", message.Trim().Take(3)) == "000")
-                        //{
-                        //    MessageBox.Show("дошло");
-                        //}
-                        //else if (message.Contains("["))
-                        //{
-                        //    UserInfo client = users.FirstOrDefault(p => p.ID == message.Substring(message.IndexOf("[") + 1,
-                        //        message.IndexOf("]") - message.IndexOf("[") - 1));
-                        //    Form.Invoke(new MethodInvoker(() =>
-                        //    {
-                        //        if (cbChooseUser.Items.Contains(client))
-                        //        {
-                        //            cbChooseUser.Items.Add(new UserInfo { Name = client.Name + "[new message]", ID = client.ID });
-                        //        }
-                        //        cbChooseUser.Items.Remove(client);
-                        //    }));
-                        //}
-                        //else
-                        //{
-                        //    Form.Invoke(new MethodInvoker(() =>
-                        //    {
-                        //        string time = DateTime.Now.ToShortTimeString();
-                        //        var host = Dns.GetHostEntry(Dns.GetHostName());
-                        //        string IP = host.AddressList.FirstOrDefault(p => p.AddressFamily == AddressFamily.InterNetwork).ToString();
-
-                        //        tbChat.Items.Add(time + " " + message);
-                        //        tbChat.Items.Add(IP);
-                        //        tbChat.Items.Add("");
-                        //        //tbChat.Text = "\r\n" + tbChat.Text;
-                        //        //tbChat.Text = IP + "\r\n" + tbChat.Text;
-                        //        //tbChat.Text = time + " " + message + "\r\n" + tbChat.Text + "\r\n";
-                        //    }));
-                        //}
                     }
 
                 }
@@ -302,6 +267,37 @@ namespace ChatClient
 
                     PinedFiles.Add(file);
                 }
+            }
+        }
+        public async void SaveFile(SelectedListViewItemCollection items, SaveFileDialog filedialog)
+        {
+            foreach(var item in items)
+            {
+                string Id = (string)ReceivedFiles.FirstOrDefault(p => p.LWItem == (ListViewItem)item).LWItem.Tag;
+                if (Id !=  null)
+                {
+                    if (filedialog.ShowDialog() == DialogResult.Cancel)
+                        return;
+                    string fileName = filedialog.FileName;
+
+                    var httpClient = new HttpClient();
+                    var response = await httpClient.GetAsync($"{fileServiceUrl}/{Id}");
+                    response.EnsureSuccessStatusCode();
+
+                    using (var dataStream = await response.Content.ReadAsStreamAsync())
+                    {
+                        using (var fileStream = File.Create(fileName))
+                        {
+                            dataStream.Seek(0, SeekOrigin.Begin);
+                            dataStream.CopyTo(fileStream);
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Это не файл!");
+                }
+                
             }
         }
         public Client(ListView tbChat, Form1 form, ComboBox cbChooseUser)

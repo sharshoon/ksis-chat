@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.tbMessage = new System.Windows.Forms.TextBox();
             this.btnSend = new System.Windows.Forms.Button();
             this.tbChat = new System.Windows.Forms.TextBox();
@@ -47,8 +48,13 @@
             this.btnMainChat = new System.Windows.Forms.Button();
             this.btnPinFile = new System.Windows.Forms.Button();
             this.lwChat = new System.Windows.Forms.ListView();
+            this.cmFileInfo = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.tsmiSaveFile = new System.Windows.Forms.ToolStripMenuItem();
+            this.tsmiFileInfo = new System.Windows.Forms.ToolStripMenuItem();
             this.rtbMessage = new System.Windows.Forms.RichTextBox();
             this.PinFileDialog = new System.Windows.Forms.OpenFileDialog();
+            this.SaveFileDialog = new System.Windows.Forms.SaveFileDialog();
+            this.cmFileInfo.SuspendLayout();
             this.SuspendLayout();
             // 
             // tbMessage
@@ -215,13 +221,36 @@
             // 
             // lwChat
             // 
+            this.lwChat.ContextMenuStrip = this.cmFileInfo;
             this.lwChat.HideSelection = false;
             this.lwChat.Location = new System.Drawing.Point(3, 172);
+            this.lwChat.MultiSelect = false;
             this.lwChat.Name = "lwChat";
             this.lwChat.Size = new System.Drawing.Size(549, 314);
             this.lwChat.TabIndex = 19;
             this.lwChat.UseCompatibleStateImageBehavior = false;
             this.lwChat.View = System.Windows.Forms.View.List;
+            // 
+            // cmFileInfo
+            // 
+            this.cmFileInfo.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.cmFileInfo.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.tsmiSaveFile,
+            this.tsmiFileInfo});
+            this.cmFileInfo.Name = "cmFileInfo";
+            this.cmFileInfo.Size = new System.Drawing.Size(232, 52);
+            // 
+            // tsmiSaveFile
+            // 
+            this.tsmiSaveFile.Name = "tsmiSaveFile";
+            this.tsmiSaveFile.Size = new System.Drawing.Size(231, 24);
+            this.tsmiSaveFile.Text = "Скачать файл";
+            // 
+            // tsmiFileInfo
+            // 
+            this.tsmiFileInfo.Name = "tsmiFileInfo";
+            this.tsmiFileInfo.Size = new System.Drawing.Size(231, 24);
+            this.tsmiFileInfo.Text = "Информация о файле";
             // 
             // rtbMessage
             // 
@@ -259,6 +288,7 @@
             this.Name = "Form1";
             this.Text = "Form1";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
+            this.cmFileInfo.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -287,6 +317,10 @@
         private System.Windows.Forms.ListView lwChat;
         private System.Windows.Forms.RichTextBox rtbMessage;
         private System.Windows.Forms.OpenFileDialog PinFileDialog;
+        private System.Windows.Forms.ContextMenuStrip cmFileInfo;
+        private System.Windows.Forms.ToolStripMenuItem tsmiSaveFile;
+        private System.Windows.Forms.ToolStripMenuItem tsmiFileInfo;
+        private System.Windows.Forms.SaveFileDialog SaveFileDialog;
     }
 }
 
