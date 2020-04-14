@@ -75,7 +75,15 @@ namespace ChatServer
                     users += client.userName + "," + client.ID + "|";   
                 }
             }
-            GeneralMessage(users);
+
+            byte[] command = { 5 };
+            byte[] data = Encoding.Unicode.GetBytes(users);
+            byte[] length = BitConverter.GetBytes(data.Length);
+            byte[] fulldata = length.Concat(command).Concat(data).ToArray();
+            for (int i = 0; i < clients.Count; i++)
+            {
+                clients[i]?.handler.Send(fulldata);
+            }
         }
         internal void ReceiveUdpMessage()
         {
@@ -131,24 +139,33 @@ namespace ChatServer
                 }
             }
         }
-        internal void GeneralMessage(string message)
+        internal void GeneralMessage(string message, byte[] command)
         {
             byte[] data = Encoding.Unicode.GetBytes(message);
+            byte[] length = BitConverter.GetBytes(data.Length);
+            byte[] fulldata = length.Concat(command).Concat(data).ToArray();
             for (int i = 0; i < clients.Count; i++)
             {
-                clients[i]?.handler.Send(data);
+                clients[i]?.handler.Send(fulldata);
             }
         }
         internal void IndividualMessage(string message, string IDSender, string IDReceiver)
         {
+            byte[] command = new byte[] { 2 };
             byte[] data = Encoding.Unicode.GetBytes($"[{IDSender}]"+message);
+            byte[] length = BitConverter.GetBytes(data.Length);
+            byte[] fulldata = length.Concat(command).Concat(data).ToArray();
             ClientObject client = clients.FirstOrDefault(p => p.ID.Trim() == IDReceiver.Trim());
-            client?.handler.Send(data);
+            client?.handler.Send(fulldata);
 
             if (client != null && (IDSender != IDReceiver))
             {
+                byte[] commandGeneral = new byte[] { 1 };
+                byte[] dataGeneral = Encoding.Unicode.GetBytes(message);
+                byte[] lengthGeneral = BitConverter.GetBytes(dataGeneral.Length);
+                byte[] fulldataGeneral = lengthGeneral.Concat(commandGeneral).Concat(dataGeneral).ToArray();
                 clients.FirstOrDefault(p => p.ID == IDSender)
-                    .handler.Send(Encoding.Unicode.GetBytes(message));
+                    .handler.Send(fulldataGeneral); /// ????????????
             }
             else if (client == null)
             {
@@ -158,18 +175,25 @@ namespace ChatServer
         }
         internal void SendChatHistory(string message, string IDSender, string IDReceiver)
         {
+            byte[] command = new byte[] { 1 };
+            byte[] data = Encoding.Unicode.GetBytes(message);
+            byte[] length = BitConverter.GetBytes(data.Length);
+            byte[] fulldata = length.Concat(command).Concat(data).ToArray();
             clients.FirstOrDefault(p => p.ID == IDSender)
-                    .handler.Send(Encoding.Unicode.GetBytes(message));
+                    .handler.Send(fulldata);
             Console.WriteLine(message);
         }
         internal void SendMainChannelMessageHistory()
         {
             foreach (var message in mainChannelMessageHistory)
             {
+                byte[] command = new byte[] { 1 };
                 byte[] data = Encoding.Unicode.GetBytes(message);
+                byte[] length = BitConverter.GetBytes(data.Length);
+                byte[] fulldata = length.Concat(command).Concat(data).ToArray();
                 for (int i = 0; i < clients.Count; i++)
                 {
-                    clients[i].handler.Send(data);
+                    clients[i].handler.Send(fulldata);
                 }
             }
         }

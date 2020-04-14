@@ -37,7 +37,7 @@ namespace ChatServer
                 
                 server.AddConnection(this);
                 //Thread.Sleep(1000);
-                server.GeneralMessage(message);
+                server.GeneralMessage(message, new byte[] { 1 });
                 server.mainChannelMessageHistory.Add(message);
                 //Thread.Sleep(300);
 
@@ -115,7 +115,7 @@ namespace ChatServer
                     {
                         message = String.Format("{0}: покинул чат", userName);
                         Console.WriteLine(message);
-                        server.GeneralMessage(message);
+                        server.GeneralMessage(message, new byte[] { 1 });
                         server.mainChannelMessageHistory.Add(message);
                         break;
                     }

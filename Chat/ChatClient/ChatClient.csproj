@@ -49,6 +49,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\Api.cs" />
+    <Compile Include="Commands\ChangeUsersListCommand.cs" />
+    <Compile Include="Commands\GeneralMessageCommand.cs" />
+    <Compile Include="Commands\ICommand.cs" />
+    <Compile Include="Commands\IndividualMessageCommand.cs" />
+    <Compile Include="Commands\SendFileCommand.cs" />
     <Compile Include="FileUploadResult.cs" />
     <Compile Include="ServersFinder.cs" />
     <Compile Include="Client.cs" />

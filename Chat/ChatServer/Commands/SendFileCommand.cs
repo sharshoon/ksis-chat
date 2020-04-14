@@ -11,7 +11,7 @@ namespace ChatServer.Commands
 
         public void Run(string message, ServerObject server)
         {
-            server.GeneralMessage(message);
+            server.GeneralMessage(message, new byte[] { 0 });
             server.mainChannelMessageHistory.Add(message);
             Console.WriteLine(message);
         }

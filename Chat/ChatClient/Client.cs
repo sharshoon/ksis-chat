@@ -11,6 +11,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using Newtonsoft.Json;
 using System.Drawing;
+using ChatClient.Commands;
 
 namespace ChatClient
 {
@@ -20,13 +21,13 @@ namespace ChatClient
         private static string userName;
         private string host = "127.0.0.1";
         private int port = 8888;
-        private Socket socket;
-        private ListView tbChat;
-        private ComboBox cbChooseUser;
-        private Form1 Form;
-        private List<UserInfo> users = new List<UserInfo>();
-        private List<FileUploadResult> PinedFiles = new List<FileUploadResult>();
-        private string fileServiceUrl = "https://localhost:44328";
+        public Socket socket;
+        public ListView tbChat;
+        public ComboBox cbChooseUser;
+        public Form1 Form;
+        public List<UserInfo> users = new List<UserInfo>();
+        public List<FileUploadResult> PinedFiles = new List<FileUploadResult>();
+        public string fileServiceUrl = "https://localhost:44328";
 
         public void Login(string name, string ip, string port)
         {
@@ -112,54 +113,75 @@ namespace ChatClient
                 {
                     byte[] data = new byte[10000]; // буфер для ответа
                     StringBuilder builder = new StringBuilder();
-                    int bytes = 0; 
+                    int bytes = 0;
 
                     //do
-                   // {
-                        bytes = socket.Receive(data, data.Length, 0);
-                        builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
+                    // {
+                    byte[] lengthData = new byte[4];
+                    socket.Receive(lengthData);
+                    int length = BitConverter.ToInt32(lengthData, 0);
+                    byte[] commandData = new byte[1];
+                    socket.Receive(commandData);
+                    byte command = commandData[0];
+
+                    bytes = socket.Receive(data, length, SocketFlags.None);
+                    builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
+
+                    //bytes = socket.Receive(data, data.Length, 0);
+                    //builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
                     //}
                     //while (socket.Available > 0);
 
                     string message = builder.ToString();
 
-                    if (message.Contains('|'))
+                    Api api = new Api();
+
+                    ICommand commandRunner = api.GetCommand(command);
+                    if (commandRunner != null)
                     {
-                        string[] messageParts = message.Split('|');
-                        ChangeUsersList(messageParts);
-                    }
-                    else if(String.Join("", message.Trim().Take(3)) == "000")
-                    {
-                        MessageBox.Show("дошло");
-                    }
-                    else if (message.Contains("["))
-                    {
-                        UserInfo client = users.FirstOrDefault(p => p.ID == message.Substring(message.IndexOf("[") + 1, 
-                            message.IndexOf("]") - message.IndexOf("[") - 1));
-                        Form.Invoke(new MethodInvoker(() =>
-                        {
-                            if (cbChooseUser.Items.Contains(client))
-                            {
-                                cbChooseUser.Items.Add(new UserInfo { Name = client.Name + "[new message]", ID = client.ID });
-                            }
-                            cbChooseUser.Items.Remove(client);
-                        }));
+                        commandRunner.Run(message, this);
                     }
                     else
                     {
-                        Form.Invoke(new MethodInvoker(() =>
-                        {
-                            string time = DateTime.Now.ToShortTimeString();
-                            var host = Dns.GetHostEntry(Dns.GetHostName());
-                            string IP = host.AddressList.FirstOrDefault(p => p.AddressFamily == AddressFamily.InterNetwork).ToString();
+                        throw new Exception("Незнакомая команда");
+                        //if (message.Contains('|'))
+                        //{
+                        //    string[] messageParts = message.Split('|');
+                        //    ChangeUsersList(messageParts);
+                        //}
+                        //else if (String.Join("", message.Trim().Take(3)) == "000")
+                        //{
+                        //    MessageBox.Show("дошло");
+                        //}
+                        //else if (message.Contains("["))
+                        //{
+                        //    UserInfo client = users.FirstOrDefault(p => p.ID == message.Substring(message.IndexOf("[") + 1,
+                        //        message.IndexOf("]") - message.IndexOf("[") - 1));
+                        //    Form.Invoke(new MethodInvoker(() =>
+                        //    {
+                        //        if (cbChooseUser.Items.Contains(client))
+                        //        {
+                        //            cbChooseUser.Items.Add(new UserInfo { Name = client.Name + "[new message]", ID = client.ID });
+                        //        }
+                        //        cbChooseUser.Items.Remove(client);
+                        //    }));
+                        //}
+                        //else
+                        //{
+                        //    Form.Invoke(new MethodInvoker(() =>
+                        //    {
+                        //        string time = DateTime.Now.ToShortTimeString();
+                        //        var host = Dns.GetHostEntry(Dns.GetHostName());
+                        //        string IP = host.AddressList.FirstOrDefault(p => p.AddressFamily == AddressFamily.InterNetwork).ToString();
 
-                            tbChat.Items.Add(time + " "+message);
-                            tbChat.Items.Add(IP);
-                            tbChat.Items.Add("");
-                            //tbChat.Text = "\r\n" + tbChat.Text;
-                            //tbChat.Text = IP + "\r\n" + tbChat.Text;
-                            //tbChat.Text = time + " " + message + "\r\n" + tbChat.Text + "\r\n";
-                        }));
+                        //        tbChat.Items.Add(time + " " + message);
+                        //        tbChat.Items.Add(IP);
+                        //        tbChat.Items.Add("");
+                        //        //tbChat.Text = "\r\n" + tbChat.Text;
+                        //        //tbChat.Text = IP + "\r\n" + tbChat.Text;
+                        //        //tbChat.Text = time + " " + message + "\r\n" + tbChat.Text + "\r\n";
+                        //    }));
+                        //}
                     }
 
                 }
@@ -172,7 +194,7 @@ namespace ChatClient
             }
         }
         
-        private void ChangeUsersList(string[] clients)
+        public void ChangeUsersList(string[] clients)
         {
             users.Clear();
             foreach (var client in clients)
@@ -189,7 +211,7 @@ namespace ChatClient
             }
             PrintUsersList();
         }
-        private void PrintUsersList()
+        public void PrintUsersList()
         {
             Form.Invoke(new MethodInvoker(() =>
             {
@@ -229,7 +251,6 @@ namespace ChatClient
             try
             {
                 byte[] command = new byte[] { 4 };
-                //string message = $"[{(((UserInfo)cbChooseUser.SelectedItem).ID)}]"+"GIHC" + "|" + users.FirstOrDefault(p => p.Name == userName).ID;
                 string message = ((UserInfo)cbChooseUser.SelectedItem).ID + users.FirstOrDefault(p => p.Name == userName).ID;
                 byte[] data = Encoding.Unicode.GetBytes(message);
                 byte[] length = BitConverter.GetBytes(data.Length);
