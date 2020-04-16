@@ -19,7 +19,7 @@ namespace ChatServer.Commands
 
             commands = new Dictionary<byte, ICommand>();
             commands.Add(0, new SendFileCommand());
-            commands.Add(1, new GeneralMessageCommand());
+            commands.Add(1, new GeneralMessageCommand(client));
             commands.Add(2, new IndividualMessageCommand(client));
             commands.Add(3, new GetHistoryCommand(client));
             commands.Add(4, new GetIndividualHistoryCommand(client));

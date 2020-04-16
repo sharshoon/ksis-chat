@@ -37,6 +37,8 @@ namespace ChatServer
                 
                 server.AddConnection(this);
                 //Thread.Sleep(1000);
+
+
                 server.GeneralMessage(message, new byte[] { 1 });
                 server.mainChannelMessageHistory.Add(message);
                 //Thread.Sleep(300);

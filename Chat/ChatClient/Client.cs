@@ -27,9 +27,11 @@ namespace ChatClient
         public ComboBox cbChooseUser;
         public Form1 Form;
         public List<UserInfo> users = new List<UserInfo>();
+        public string Id { get; set; }
         public List<FileUploadResult> PinedFiles = new List<FileUploadResult>();
+        public List<FileUploadResult> SentFiles = new List<FileUploadResult>();
         public List<ReceivedFileInfo> ReceivedFiles = new List<ReceivedFileInfo>();
-        public string fileServiceUrl = "https://localhost:44328";
+        public string fileServiceUrl = "http://localhost:8889/connection/";//"https://localhost:44328";
 
         public void Login(string name, string ip, string port)
         {
@@ -72,14 +74,17 @@ namespace ChatClient
                         byte[] fileCommand = new byte[] { 0 };
                         byte[] filedata = Encoding.Unicode.GetBytes(PinedFiles.FirstOrDefault(p => p.fileName == file.fileName).Id + file.fileName);
                         byte[] fileDataLength = BitConverter.GetBytes(filedata.Length);
-
                         byte[] fullFileData = fileDataLength.Concat(fileCommand).Concat(filedata).ToArray();
                         socket.Send(fullFileData);
+
+                        SentFiles.Add(file);
 
                         var newMessage = tbMessage.Text.Remove(tbMessage.Text.IndexOf(file.fileName), file.fileName.Length);
                         tbMessage.Text = newMessage;
                     }
                 }
+
+                PinedFiles.Clear();
                 
                 if (String.IsNullOrWhiteSpace(tbMessage.Text))
                 {
@@ -216,6 +221,8 @@ namespace ChatClient
             try
             {
                 byte[] command = new byte[] { 4 };
+
+                // Плохо, потому что ищет свой ID по Имени
                 string message = ((UserInfo)cbChooseUser.SelectedItem).ID + users.FirstOrDefault(p => p.Name == userName).ID;
                 byte[] data = Encoding.Unicode.GetBytes(message);
                 byte[] length = BitConverter.GetBytes(data.Length);
@@ -249,11 +256,13 @@ namespace ChatClient
                 {
                     fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
                     form.Add(fileContent, "file", Path.GetFileName(fileName));
-                    form.Add(new StringContent("789"), "userId");
+                    form.Add(new StringContent($"789"), "userId");
                     form.Add(new StringContent("some comments"), "comment");
-                    form.Add(new StringContent("false"), "isPrimary");
+                    //form.Add(new StringContent("false"), "isPrimary");
 
-                    var response = await client.PostAsync($"{fileServiceUrl}", form);
+                    var stringContent = new StringContent("hello");
+
+                    var response = await client.PostAsync($"{fileServiceUrl}", stringContent); // form
                     response.EnsureSuccessStatusCode();
                     var responseContent = await response.Content.ReadAsStringAsync();
                     
@@ -268,6 +277,39 @@ namespace ChatClient
                     PinedFiles.Add(file);
                 }
             }
+
+            //if (pinFileDialog.ShowDialog() == DialogResult.Cancel)
+            //    return;
+            //string fileName = pinFileDialog.FileName;
+
+            //var client = new HttpClient();
+            //using (var form = new MultipartFormDataContent())
+            //{
+            //    using (var fileContent = new ByteArrayContent(File.ReadAllBytes(fileName)))
+            //    {
+            //        fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
+            //        form.Add(fileContent, "file", Path.GetFileName(fileName));
+            //        form.Add(new StringContent($"789"), "userId");
+            //        form.Add(new StringContent("some comments"), "comment");
+            //        //form.Add(new StringContent("false"), "isPrimary");
+
+            //        var stringContent = new StringContent("hello");
+
+            //        var response = await client.PostAsync($"{fileServiceUrl}", stringContent); // form
+            //        response.EnsureSuccessStatusCode();
+            //        var responseContent = await response.Content.ReadAsStringAsync();
+
+            //        //MessageBox.Show(responseContent);
+            //        var file = JsonConvert.DeserializeObject<FileUploadResult>(responseContent);
+            //        //MessageBox.Show(file.fileName);
+
+            //        rtbMessage.SelectionColor = Color.Blue;
+            //        rtbMessage.AppendText($"\n{file.fileName}");
+            //        rtbMessage.SelectionColor = Color.Black;
+
+            //        PinedFiles.Add(file);
+            //    }
+            //}
         }
         public async void SaveFile(SelectedListViewItemCollection items, SaveFileDialog filedialog)
         {
@@ -298,6 +340,53 @@ namespace ChatClient
                     MessageBox.Show("Это не файл!");
                 }
                 
+            }
+        }
+        public async void ShowFileInfo(SelectedListViewItemCollection items)
+        {
+            foreach (var item in items)
+            {
+                string Id = (string)ReceivedFiles.FirstOrDefault(p => p.LWItem == (ListViewItem)item).LWItem.Tag;
+                if (Id != null)
+                {
+                    
+                    var httpClient = new HttpClient();
+                    var response = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, $"{fileServiceUrl}/{Id}"));
+                    response.EnsureSuccessStatusCode();
+                    var fileInfo = response.Content.Headers.ToString();
+                    MessageBox.Show(fileInfo);
+                }
+                else
+                {
+                    MessageBox.Show("Это не файл!");
+                }
+
+            }
+        }
+        public async void DeleteFile(SelectedListViewItemCollection items)
+        {
+            foreach (var item in items)
+            {
+                string Id = (string)ReceivedFiles.FirstOrDefault(p => p.LWItem == (ListViewItem)item).LWItem.Tag;
+                if (Id != null)
+                {
+                    if(SentFiles.Any(p => p.Id == Id))
+                    {
+                        var httpClient = new HttpClient();
+                        var response = await httpClient.DeleteAsync($"{fileServiceUrl}/{Id}");
+                        response.EnsureSuccessStatusCode();
+                        MessageBox.Show("Файл успсешно удален!");
+                    }
+                    else
+                    {
+                        MessageBox.Show("Файл был отправлен не вами, вы не можете его удалить!");
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Это не файл!");
+                }
+
             }
         }
         public Client(ListView tbChat, Form1 form, ComboBox cbChooseUser)

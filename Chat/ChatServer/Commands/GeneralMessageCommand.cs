@@ -7,14 +7,18 @@ namespace ChatServer.Commands
     class GeneralMessageCommand : ICommand
     {
         public byte Id { get; } = 1;
+        ClientObject Client;
 
         public void Run(string message, ServerObject server)
         {
+            message = String.Format("{0}: {1}", Client.userName, message);
             server.GeneralMessage(message, new byte[] { 1 });
             server.mainChannelMessageHistory.Add(message);
             Console.WriteLine(message);
         }
-        public GeneralMessageCommand()
-        { }
+        public GeneralMessageCommand(ClientObject client)
+        {
+            Client = client;
+        }
     }
 }

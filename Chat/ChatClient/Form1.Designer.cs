@@ -54,6 +54,7 @@
             this.rtbMessage = new System.Windows.Forms.RichTextBox();
             this.PinFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.SaveFileDialog = new System.Windows.Forms.SaveFileDialog();
+            this.tsmiDeleteFile = new System.Windows.Forms.ToolStripMenuItem();
             this.cmFileInfo.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -236,9 +237,10 @@
             this.cmFileInfo.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.cmFileInfo.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tsmiSaveFile,
-            this.tsmiFileInfo});
+            this.tsmiFileInfo,
+            this.tsmiDeleteFile});
             this.cmFileInfo.Name = "cmFileInfo";
-            this.cmFileInfo.Size = new System.Drawing.Size(232, 52);
+            this.cmFileInfo.Size = new System.Drawing.Size(232, 104);
             // 
             // tsmiSaveFile
             // 
@@ -259,6 +261,12 @@
             this.rtbMessage.Size = new System.Drawing.Size(401, 53);
             this.rtbMessage.TabIndex = 20;
             this.rtbMessage.Text = "";
+            // 
+            // tsmiDeleteFile
+            // 
+            this.tsmiDeleteFile.Name = "tsmiDeleteFile";
+            this.tsmiDeleteFile.Size = new System.Drawing.Size(231, 24);
+            this.tsmiDeleteFile.Text = "Удалить файл";
             // 
             // Form1
             // 
@@ -321,6 +329,7 @@
         private System.Windows.Forms.ToolStripMenuItem tsmiSaveFile;
         private System.Windows.Forms.ToolStripMenuItem tsmiFileInfo;
         private System.Windows.Forms.SaveFileDialog SaveFileDialog;
+        private System.Windows.Forms.ToolStripMenuItem tsmiDeleteFile;
     }
 }
 

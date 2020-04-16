@@ -13,10 +13,13 @@ namespace ChatServer.Commands
         public void Run(string message, ServerObject server)
         {
             var receiverID = message.Take(36);
-            var messageBody = message.Skip(36);
-            server.IndividualMessage(String.Join("",messageBody), Client.ID, String.Join("",receiverID));
-            Client.WriteHistoryDialog(String.Join("", messageBody), String.Join("", receiverID));
-            Console.WriteLine(String.Join("", messageBody));
+            var messageBody = String.Join("",message.Skip(36));
+
+            messageBody = String.Format("{0}: {1}", Client.userName, messageBody);
+
+            server.IndividualMessage(messageBody, Client.ID, String.Join("",receiverID));
+            Client.WriteHistoryDialog(messageBody, String.Join("", receiverID));
+            Console.WriteLine(messageBody);
         }
         public IndividualMessageCommand(ClientObject client)
         {
