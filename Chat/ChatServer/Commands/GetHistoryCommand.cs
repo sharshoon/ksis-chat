@@ -14,7 +14,7 @@ namespace ChatServer.Commands
         {
             foreach (var messageFromHistory in server.mainChannelMessageHistory)
             {
-                server.SendChatHistory(messageFromHistory, Client.ID, message);
+                server.SendGeneralHistory(messageFromHistory.Message,messageFromHistory.Command, Client.ID, message);
                 Thread.Sleep(150);
             }
         }

@@ -12,7 +12,11 @@ namespace ChatServer.Commands
         public void Run(string message, ServerObject server)
         {
             server.GeneralMessage(message, new byte[] { 0 });
-            server.mainChannelMessageHistory.Add(message);
+            server.mainChannelMessageHistory.Add(new MessageHistory
+            {
+                Message = message,
+                Command = new byte[] { 0 }
+            });
             Console.WriteLine(message);
         }
         public SendFileCommand()

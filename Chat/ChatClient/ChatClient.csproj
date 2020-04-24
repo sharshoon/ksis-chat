@@ -55,6 +55,7 @@
     <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Commands\IndividualMessageCommand.cs" />
     <Compile Include="Commands\SendFileCommand.cs" />
+    <Compile Include="Commands\SendIndividualFileCommand.cs" />
     <Compile Include="FileUploadResult.cs" />
     <Compile Include="ReceivedFileInfo.cs" />
     <Compile Include="ServersFinder.cs" />

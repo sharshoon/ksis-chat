@@ -24,7 +24,7 @@ namespace ChatClient
             InitializeComponent();
             user = new Client(lwChat, this, cbChooseUser);
             broadcast = new ServersFinder(this, cbServers);
-            btnPinFile.Click += (sender, e) => user.PinFiles(PinFileDialog, rtbMessage);
+            btnPinFile.Click += (sender, e) => user.PinFiles(PinFileDialog, rtbMessage, btnSend);
             tsmiSaveFile.Click += (sender, e) => user.SaveFile(lwChat.SelectedItems, SaveFileDialog);
             tsmiFileInfo.Click += (sender, e) => user.ShowFileInfo(lwChat.SelectedItems);
             tsmiDeleteFile.Click += (sender, e) => user.DeleteFile(lwChat.SelectedItems);

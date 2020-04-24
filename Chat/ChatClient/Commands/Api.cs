@@ -20,6 +20,7 @@ namespace ChatClient.Commands
             commands.Add(1, new GeneralMessageCommand());
             commands.Add(2, new IndividualMessageCommand());
             commands.Add(5, new ChangeUsersListCommand());
+            commands.Add(6, new SendIndividualFileCommand());
         }
     }
 }

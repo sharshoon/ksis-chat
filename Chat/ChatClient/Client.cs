@@ -67,12 +67,25 @@ namespace ChatClient
         {
             try
             {
+                string message;
+
                 foreach (var file in PinedFiles)
                 {
                     if (tbMessage.Text.Contains($"{file.fileName}"))
                     {
-                        byte[] fileCommand = new byte[] { 0 };
-                        byte[] filedata = Encoding.Unicode.GetBytes(PinedFiles.FirstOrDefault(p => p.fileName == file.fileName).Id + file.fileName);
+                        byte[] fileCommand;
+                        if (cbChooseUser.Text.Trim() == "")
+                        {
+                            message = file.Id + file.fileName;
+                            fileCommand = new byte[] { 0 };
+                        }
+                        else
+                        {
+                            message = String.Format(((UserInfo)cbChooseUser.SelectedItem).ID + file.Id + file.fileName);
+                            fileCommand = new byte[] { 6 };
+                        }
+                        
+                        byte[] filedata = Encoding.Unicode.GetBytes(message);
                         byte[] fileDataLength = BitConverter.GetBytes(filedata.Length);
                         byte[] fullFileData = fileDataLength.Concat(fileCommand).Concat(filedata).ToArray();
                         socket.Send(fullFileData);
@@ -92,7 +105,6 @@ namespace ChatClient
                 }
 
                 byte[] command;
-                string message;
                 if(cbChooseUser.Text.Trim() == "")
                 {
                     message = String.Format(tbMessage.Text);
@@ -158,7 +170,7 @@ namespace ChatClient
                 catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message);
-                    MessageBox.Show("Подключение прервано!");
+                    MessageBox.Show("Подключение прервано!!!!!!");
                     Disconnect();
                 }
             }
@@ -236,6 +248,7 @@ namespace ChatClient
 
                     UserInfo client = users.FirstOrDefault(p => p.ID == selected.ID);
                     cbChooseUser.Items.Add(client);
+                    cbChooseUser.SelectedItem = client;
                 }
             }
             catch (Exception ex)
@@ -243,12 +256,14 @@ namespace ChatClient
                 MessageBox.Show(ex.Message);
             }
         }
-        public async void PinFiles(FileDialog pinFileDialog, RichTextBox rtbMessage)
+        public async void PinFiles(FileDialog pinFileDialog, RichTextBox rtbMessage, Button btnSend)
         {
             if (pinFileDialog.ShowDialog() == DialogResult.Cancel)
                 return;
             string fileName = pinFileDialog.FileName;
 
+
+            btnSend.Enabled = false;
             var client = new HttpClient();
             using (var form = new MultipartFormDataContent())
             {
@@ -256,60 +271,47 @@ namespace ChatClient
                 {
                     fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
                     form.Add(fileContent, "file", Path.GetFileName(fileName));
-                    form.Add(new StringContent($"789"), "userId");
-                    form.Add(new StringContent("some comments"), "comment");
-                    //form.Add(new StringContent("false"), "isPrimary");
 
-                    var stringContent = new StringContent("hello");
+                    var response = await client.PostAsync($"{fileServiceUrl}", form); // form
+                    try
+                    {
+                        response.EnsureSuccessStatusCode();
+                        var responseContent = await response.Content.ReadAsStringAsync();
 
-                    var response = await client.PostAsync($"{fileServiceUrl}", stringContent); // form
-                    response.EnsureSuccessStatusCode();
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    
-                    //MessageBox.Show(responseContent);
-                    var file = JsonConvert.DeserializeObject<FileUploadResult>(responseContent);
-                    //MessageBox.Show(file.fileName);
+                        var file = new FileUploadResult()
+                        {
+                            fileName = Path.GetFileName(fileName),
+                            Id = responseContent
+                        };
 
-                    rtbMessage.SelectionColor = Color.Blue;
-                    rtbMessage.AppendText($"\n{file.fileName}");
-                    rtbMessage.SelectionColor = Color.Black;
+                        rtbMessage.SelectionColor = Color.Blue;
+                        rtbMessage.AppendText($"\n{file.fileName}");
+                        rtbMessage.SelectionColor = Color.Black;
 
-                    PinedFiles.Add(file);
+                        PinedFiles.Add(file);
+                    }
+                    catch
+                    {
+                        if (response.StatusCode == HttpStatusCode.RequestEntityTooLarge)
+                        {
+                            MessageBox.Show("Слишком большой размер файла");
+                        }
+                        else if (response.StatusCode == HttpStatusCode.NoContent)
+                        {
+                            MessageBox.Show("Пустой файл");
+                        }
+                        else if (response.StatusCode == HttpStatusCode.Forbidden)
+                        {
+                            MessageBox.Show("Такое разрешение не допускается к загрузке");
+                        }
+                        else if (response.StatusCode == HttpStatusCode.BadRequest)
+                        {
+                            MessageBox.Show("Произошла ошибка");
+                        }
+                    }
                 }
             }
-
-            //if (pinFileDialog.ShowDialog() == DialogResult.Cancel)
-            //    return;
-            //string fileName = pinFileDialog.FileName;
-
-            //var client = new HttpClient();
-            //using (var form = new MultipartFormDataContent())
-            //{
-            //    using (var fileContent = new ByteArrayContent(File.ReadAllBytes(fileName)))
-            //    {
-            //        fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
-            //        form.Add(fileContent, "file", Path.GetFileName(fileName));
-            //        form.Add(new StringContent($"789"), "userId");
-            //        form.Add(new StringContent("some comments"), "comment");
-            //        //form.Add(new StringContent("false"), "isPrimary");
-
-            //        var stringContent = new StringContent("hello");
-
-            //        var response = await client.PostAsync($"{fileServiceUrl}", stringContent); // form
-            //        response.EnsureSuccessStatusCode();
-            //        var responseContent = await response.Content.ReadAsStringAsync();
-
-            //        //MessageBox.Show(responseContent);
-            //        var file = JsonConvert.DeserializeObject<FileUploadResult>(responseContent);
-            //        //MessageBox.Show(file.fileName);
-
-            //        rtbMessage.SelectionColor = Color.Blue;
-            //        rtbMessage.AppendText($"\n{file.fileName}");
-            //        rtbMessage.SelectionColor = Color.Black;
-
-            //        PinedFiles.Add(file);
-            //    }
-            //}
+            btnSend.Enabled = true;
         }
         public async void SaveFile(SelectedListViewItemCollection items, SaveFileDialog filedialog)
         {
@@ -324,14 +326,28 @@ namespace ChatClient
 
                     var httpClient = new HttpClient();
                     var response = await httpClient.GetAsync($"{fileServiceUrl}/{Id}");
-                    response.EnsureSuccessStatusCode();
 
-                    using (var dataStream = await response.Content.ReadAsStreamAsync())
+                    try
                     {
-                        using (var fileStream = File.Create(fileName))
+                        response.EnsureSuccessStatusCode();
+                        using (var dataStream = await response.Content.ReadAsStreamAsync())
                         {
-                            dataStream.Seek(0, SeekOrigin.Begin);
-                            dataStream.CopyTo(fileStream);
+                            using (var fileStream = File.Create(fileName))
+                            {
+                                dataStream.Seek(0, SeekOrigin.Begin);
+                                dataStream.CopyTo(fileStream);
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        if (response.StatusCode == HttpStatusCode.NotFound)
+                        {
+                            MessageBox.Show("Такого файла не существует на сервере");
+                        }
+                        else if (response.StatusCode == HttpStatusCode.BadRequest)
+                        {
+                            MessageBox.Show("Произошла ошибка");
                         }
                     }
                 }
@@ -352,15 +368,28 @@ namespace ChatClient
                     
                     var httpClient = new HttpClient();
                     var response = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, $"{fileServiceUrl}/{Id}"));
-                    response.EnsureSuccessStatusCode();
-                    var fileInfo = response.Content.Headers.ToString();
-                    MessageBox.Show(fileInfo);
+                    try
+                    {
+                        response.EnsureSuccessStatusCode();
+                        var fileInfo = response.Headers.ToString();
+                        MessageBox.Show(fileInfo);
+                    }
+                    catch
+                    {
+                        if (response.StatusCode == HttpStatusCode.NotFound)
+                        {
+                            MessageBox.Show("Такого файла не существует на сервере");
+                        }
+                        else if(response.StatusCode == HttpStatusCode.BadRequest)
+                        {
+                            MessageBox.Show("Произошла ошибка");
+                        }
+                    }
                 }
                 else
                 {
                     MessageBox.Show("Это не файл!");
                 }
-
             }
         }
         public async void DeleteFile(SelectedListViewItemCollection items)

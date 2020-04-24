@@ -23,6 +23,7 @@ namespace ChatServer.Commands
             commands.Add(2, new IndividualMessageCommand(client));
             commands.Add(3, new GetHistoryCommand(client));
             commands.Add(4, new GetIndividualHistoryCommand(client));
+            commands.Add(6, new SendIndividualFileCommand(client));
         }
     }
 }

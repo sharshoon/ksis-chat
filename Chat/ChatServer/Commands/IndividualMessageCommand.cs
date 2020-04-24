@@ -18,7 +18,7 @@ namespace ChatServer.Commands
             messageBody = String.Format("{0}: {1}", Client.userName, messageBody);
 
             server.IndividualMessage(messageBody, Client.ID, String.Join("",receiverID));
-            Client.WriteHistoryDialog(messageBody, String.Join("", receiverID));
+            Client.WriteHistoryDialog(Encoding.UTF8.GetString(new byte[] { 1 }) + messageBody, String.Join("", receiverID));
             Console.WriteLine(messageBody);
         }
         public IndividualMessageCommand(ClientObject client)

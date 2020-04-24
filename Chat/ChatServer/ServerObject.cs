@@ -14,7 +14,7 @@ namespace ChatServer
     {
         static Socket listenSocket;
         internal ObservableCollection<ClientObject> clients = new ObservableCollection<ClientObject>();
-        internal List<string> mainChannelMessageHistory = new List<string>();
+        internal List<MessageHistory> mainChannelMessageHistory = new List<MessageHistory>();
 
         static IPAddress remoteAddress;
         const int remotePort = 8888;
@@ -165,7 +165,7 @@ namespace ChatServer
                 byte[] lengthGeneral = BitConverter.GetBytes(dataGeneral.Length);
                 byte[] fulldataGeneral = lengthGeneral.Concat(commandGeneral).Concat(dataGeneral).ToArray();
                 clients.FirstOrDefault(p => p.ID == IDSender)
-                    .handler.Send(fulldataGeneral); /// ????????????
+                    .handler.Send(fulldataGeneral);
             }
             else if (client == null)
             {
@@ -173,29 +173,52 @@ namespace ChatServer
                     .handler.Send(Encoding.Unicode.GetBytes("Такого пользователя не существует"));
             }
         }
+
+        internal void SendIndividualFile(string fileID, string IDSender, string IDReceiver)
+        {
+            byte[] command = new byte[] { 6 };
+            byte[] data = Encoding.Unicode.GetBytes($"[{IDSender}]" + fileID);
+            byte[] length = BitConverter.GetBytes(data.Length);
+            byte[] fulldata = length.Concat(command).Concat(data).ToArray();
+            ClientObject client = clients.FirstOrDefault(p => p.ID.Trim() == IDReceiver.Trim());
+            client?.handler.Send(fulldata);
+
+            if (client != null && (IDSender != IDReceiver))
+            {
+                byte[] commandGeneral = new byte[] { 0 };
+                byte[] dataGeneral = Encoding.Unicode.GetBytes(fileID);
+                byte[] lengthGeneral = BitConverter.GetBytes(dataGeneral.Length);
+                byte[] fulldataGeneral = lengthGeneral.Concat(commandGeneral).Concat(dataGeneral).ToArray();
+                clients.FirstOrDefault(p => p.ID == IDSender)
+                    .handler.Send(fulldataGeneral);
+            }
+            else if (client == null)
+            {
+                clients.FirstOrDefault(p => p.ID == IDSender)
+                    .handler.Send(Encoding.Unicode.GetBytes("Такого пользователя не существует")); // С новыми командами уже работать не будет
+            }
+        }
         internal void SendChatHistory(string message, string IDSender, string IDReceiver)
         {
-            byte[] command = new byte[] { 1 };
+            byte[] command = new byte[] { Encoding.UTF8.GetBytes(message)[0] };
+            message = String.Join("", message.Skip(1));
             byte[] data = Encoding.Unicode.GetBytes(message);
             byte[] length = BitConverter.GetBytes(data.Length);
+            Console.WriteLine(data.Length.ToString());
             byte[] fulldata = length.Concat(command).Concat(data).ToArray();
             clients.FirstOrDefault(p => p.ID == IDSender)
                     .handler.Send(fulldata);
             Console.WriteLine(message);
         }
-        internal void SendMainChannelMessageHistory()
+        internal void SendGeneralHistory(string message, byte[] command, string IDSender, string IDReceiver)
         {
-            foreach (var message in mainChannelMessageHistory)
-            {
-                byte[] command = new byte[] { 1 };
-                byte[] data = Encoding.Unicode.GetBytes(message);
-                byte[] length = BitConverter.GetBytes(data.Length);
-                byte[] fulldata = length.Concat(command).Concat(data).ToArray();
-                for (int i = 0; i < clients.Count; i++)
-                {
-                    clients[i].handler.Send(fulldata);
-                }
-            }
+            byte[] data = Encoding.Unicode.GetBytes(message);
+            byte[] length = BitConverter.GetBytes(data.Length);
+            Console.WriteLine(data.Length.ToString());
+            byte[] fulldata = length.Concat(command).Concat(data).ToArray();
+            clients.FirstOrDefault(p => p.ID == IDSender)
+                    .handler.Send(fulldata);
+            Console.WriteLine(message);
         }
         internal void Disconnect()
         {

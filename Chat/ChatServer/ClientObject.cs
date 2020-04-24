@@ -40,7 +40,11 @@ namespace ChatServer
 
 
                 server.GeneralMessage(message, new byte[] { 1 });
-                server.mainChannelMessageHistory.Add(message);
+                server.mainChannelMessageHistory.Add(new MessageHistory()
+                {
+                    Message = message,
+                    Command = new byte[] { 1 }
+                });
                 //Thread.Sleep(300);
 
                 Console.WriteLine(message);
@@ -68,7 +72,11 @@ namespace ChatServer
                         message = String.Format("{0}: покинул чат", userName);
                         Console.WriteLine(message);
                         server.GeneralMessage(message, new byte[] { 1 });
-                        server.mainChannelMessageHistory.Add(message);
+                        server.mainChannelMessageHistory.Add(new MessageHistory()
+                        {
+                            Message = message,
+                            Command = new byte[] { 1 }
+                        });
                         break;
                     }
                 }

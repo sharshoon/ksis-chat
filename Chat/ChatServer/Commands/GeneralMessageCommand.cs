@@ -13,7 +13,11 @@ namespace ChatServer.Commands
         {
             message = String.Format("{0}: {1}", Client.userName, message);
             server.GeneralMessage(message, new byte[] { 1 });
-            server.mainChannelMessageHistory.Add(message);
+            server.mainChannelMessageHistory.Add(new MessageHistory
+            {
+                Message = message,
+                Command = new byte[] { 1 }
+            });
             Console.WriteLine(message);
         }
         public GeneralMessageCommand(ClientObject client)
